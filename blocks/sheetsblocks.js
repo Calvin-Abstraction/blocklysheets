@@ -13,3 +13,18 @@ Blockly.Blocks['sheets_start'] = {
  this.setHelpUrl("");
   }
 };
+
+Blockly.Blocks['sheets_cell'] = {
+  init: function() {
+    this.appendValueInput("inputCell")
+        .setCheck("String")
+        .appendField("Column")
+        .appendField(new Blockly.FieldTextInput("column"), "column")
+        .appendField("Row")
+        .appendField(new Blockly.FieldTextInput("row"), "row");
+    this.setOutput(true, null);
+    this.setColour(0);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
