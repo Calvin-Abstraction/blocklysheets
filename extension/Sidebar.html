@@ -4424,52 +4424,45 @@ Blockly.Sheets['variables_set'] = function(block) {
   return varName + ' = ' + argument0 + ';\n';
 };
 </script>
-    <base target="_top">
-    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
-    <!-- The CSS package above applies Google styling to buttons and other elements. -->
+<base target="_top">
+<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+<!-- The CSS package above applies Google styling to buttons and other elements. -->
 
-    <style>
-    .branding-below {
-      bottom: 56px;
-      top: 0;
-    }
+<style>
+.branding-below {
+  bottom: 56px;
+  top: 0;
+}
 
-    .branding-text {
-      left: 7px;
-      position: relative;
-      top: 3px;
-    }
+.branding-text {
+  left: 7px;
+  position: relative;
+  top: 3px;
+}
 
-    .col-contain {
-      overflow: hidden;
-    }
+.col-contain {
+  overflow: hidden;
+}
 
-    .col-one {
-      float: left;
-      width: 50%;
-    }
+.col-one {
+  float: left;
+  width: 50%;
+}
 
-    .logo {
-      vertical-align: middle;
-    }
+.logo {
+  vertical-align: middle;
+}
 
-    .radio-spacer {
-      height: 20px;
-    }
+.radio-spacer {
+  height: 20px;
+}
 
-    .width-100 {
-      width: 100%;
-    }
-    </style>
-  </head>
-
+.width-100 {
+  width: 100%;
+}
+</style>
+</head>
 <body>
-  <div class="sidebar branding-below">
-
-<p>Build your formulas one block by block!</p>
-
-<div id="blocklyDiv" style="height: 480px; width: 100%;"></div>
-
 <xml id="toolbox" style="display: none">
   <category name="Logic">
 	<block type="controls_if"></block>
@@ -4498,9 +4491,7 @@ Blockly.Sheets['variables_set'] = function(block) {
 	<block type="text_length"></block>
 	<block type="text_print"></block>
   </category>
-</xml>
-
-<xml id="startBlocks" style="display: none">
+</xml><xml id="startBlocks" style="display: none">
   <block type="controls_if" inline="false" x="20" y="20">
 	<mutation else="1"></mutation>
 	<value name="IF0">
@@ -4548,6 +4539,11 @@ Blockly.Sheets['variables_set'] = function(block) {
 	</statement>
   </block>
 </xml>
+  <div class="sidebar branding-below">
+
+<p>Build your formulas block by block!</p>
+
+<div id="blocklyDiv" style="height: 480px; width: 100%;"></div>
 
 <script>
   var workspace = Blockly.inject('blocklyDiv',

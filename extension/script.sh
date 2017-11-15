@@ -24,4 +24,8 @@ cat "../generators/sheets/$value" >> Sidebar.html
 echo "</script>" >> Sidebar.html
 done
 
+cat SidebarHeadEnd.html >> Sidebar.html
+echo "<body>" >> Sidebar.html
+cat toolbox.xml >> Sidebar.html
+cat startBlocks.xml >> Sidebar.html
 cat Sidebarbodyend.html >> Sidebar.html
