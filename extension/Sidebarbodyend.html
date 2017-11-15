@@ -41,9 +41,6 @@
   <div class="sidebar branding-below">
 
 <p>Build your formulas one block by block!</p>
-<p>
-  <button onclick="showCode()">Show Google Sheets formulae</button>
-</p>
 
 <div id="blocklyDiv" style="height: 480px; width: 100%;"></div>
 
@@ -137,9 +134,13 @@
 	// Generate JavaScript code and display it.
 	Blockly.Sheets.INFINITE_LOOP_TRAP = null;
 	var code = Blockly.Sheets.workspaceToCode(workspace);
-	alert(code);
+	document.getElementById("generated-formulas").value = code;
   }
 </script>
+
+<p>
+  <button onclick="showCode()">Show Google Sheets formulae</button>
+</p>
 
 <!-- old stuff-->  
 
@@ -148,8 +149,8 @@
 	  </div>
 
 	  <div class="block form-group">
-		<label for="translated-text"><b>Output</b></label>
-		<textarea class="width-100" id="translated-text" rows="4"></textarea>
+		<label for="generated-formulas"><b>Output</b></label>
+		<textarea class="width-100" id="generated-formulas" rows="4" disabled></textarea>
 	  </div>
 
 	 <div class="block" id="button-bar">
@@ -206,7 +207,7 @@
 	  google.script.run
 		  .withSuccessHandler(
 			function(textAndTranslation, element) {
-			  $('#translated-text').val(textAndTranslation.translation);
+			  $('#generated-formulas').val(textAndTranslation.translation);
 			  element.disabled = false;
 			})
 		  .withFailureHandler(
@@ -236,7 +237,7 @@
 			  element.disabled = false;
 			})
 		  .withUserObject(this)
-		  .insertText($('#translated-text').val());
+		  .insertText($('#generated-formulas').val());
 	}
 
 	/**

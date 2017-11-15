@@ -2340,6 +2340,2090 @@ Blockly.Msg["VARIABLES_HUE"] = "330";
 Blockly.Msg["TEXTS_HUE"] = "160";
 Blockly.Msg["PROCEDURES_HUE"] = "290";
 Blockly.Msg["COLOUR_HUE"] = "20";</script>
+<script>
+/**
+ * @license
+ * Visual Blocks Language
+ *
+ * Copyright 2012 Google Inc.
+ * https://developers.google.com/blockly/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @fileoverview Helper functions for generating Sheets for blocks.
+ * @author fraser@google.com (Neil Fraser)
+ * @author zachdecook@gmail.com (Zach DeCook)
+ */
+'use strict';
+
+goog.provide('Blockly.Sheets');
+
+goog.require('Blockly.Generator');
+
+
+/**
+ * Sheets code generator.
+ * @type {!Blockly.Generator}
+ */
+Blockly.Sheets = new Blockly.Generator('Sheets');
+
+/**
+ * List of illegal variable names.
+ * This is not intended to be a security feature.  Blockly is 100% client-side,
+ * so bypassing this list is trivial.  This is intended to prevent users from
+ * accidentally clobbering a built-in object or function.
+ * @private
+ */
+Blockly.Sheets.addReservedWords(
+    'Blockly,' +  // In case JS is evaled in the current window.
+    // https://developer.mozilla.org/en/Sheets/Reference/Reserved_Words
+    'break,case,catch,continue,debugger,default,delete,do,else,finally,for,function,if,in,instanceof,new,return,switch,this,throw,try,typeof,var,void,while,with,' +
+    'class,enum,export,extends,import,super,implements,interface,let,package,private,protected,public,static,yield,' +
+    'const,null,true,false,' +
+    // https://developer.mozilla.org/en/Sheets/Reference/Global_Objects
+    'Array,ArrayBuffer,Boolean,Date,decodeURI,decodeURIComponent,encodeURI,encodeURIComponent,Error,eval,EvalError,Float32Array,Float64Array,Function,Infinity,Int16Array,Int32Array,Int8Array,isFinite,isNaN,Iterator,JSON,Math,NaN,Number,Object,parseFloat,parseInt,RangeError,ReferenceError,RegExp,StopIteration,String,SyntaxError,TypeError,Uint16Array,Uint32Array,Uint8Array,Uint8ClampedArray,undefined,uneval,URIError,' +
+    // https://developer.mozilla.org/en/DOM/window
+    'applicationCache,closed,Components,content,_content,controllers,crypto,defaultStatus,dialogArguments,directories,document,frameElement,frames,fullScreen,globalStorage,history,innerHeight,innerWidth,length,location,locationbar,localStorage,menubar,messageManager,mozAnimationStartTime,mozInnerScreenX,mozInnerScreenY,mozPaintCount,name,navigator,opener,outerHeight,outerWidth,pageXOffset,pageYOffset,parent,performance,personalbar,pkcs11,returnValue,screen,screenX,screenY,scrollbars,scrollMaxX,scrollMaxY,scrollX,scrollY,self,sessionStorage,sidebar,status,statusbar,toolbar,top,URL,window,' +
+    'addEventListener,alert,atob,back,blur,btoa,captureEvents,clearImmediate,clearInterval,clearTimeout,close,confirm,disableExternalCapture,dispatchEvent,dump,enableExternalCapture,escape,find,focus,forward,GeckoActiveXObject,getAttention,getAttentionWithCycleCount,getComputedStyle,getSelection,home,matchMedia,maximize,minimize,moveBy,moveTo,mozRequestAnimationFrame,open,openDialog,postMessage,print,prompt,QueryInterface,releaseEvents,removeEventListener,resizeBy,resizeTo,restore,routeEvent,scroll,scrollBy,scrollByLines,scrollByPages,scrollTo,setCursor,setImmediate,setInterval,setResizable,setTimeout,showModalDialog,sizeToContent,stop,unescape,updateCommands,XPCNativeWrapper,XPCSafeJSObjectWrapper,' +
+    'onabort,onbeforeunload,onblur,onchange,onclick,onclose,oncontextmenu,ondevicemotion,ondeviceorientation,ondragdrop,onerror,onfocus,onhashchange,onkeydown,onkeypress,onkeyup,onload,onmousedown,onmousemove,onmouseout,onmouseover,onmouseup,onmozbeforepaint,onpaint,onpopstate,onreset,onresize,onscroll,onselect,onsubmit,onunload,onpageshow,onpagehide,' +
+    'Image,Option,Worker,' +
+    // https://developer.mozilla.org/en/Gecko_DOM_Reference
+    'Event,Range,File,FileReader,Blob,BlobBuilder,' +
+    'Attr,CDATASection,CharacterData,Comment,console,DocumentFragment,DocumentType,DomConfiguration,DOMError,DOMErrorHandler,DOMException,DOMImplementation,DOMImplementationList,DOMImplementationRegistry,DOMImplementationSource,DOMLocator,DOMObject,DOMString,DOMStringList,DOMTimeStamp,DOMUserData,Entity,EntityReference,MediaQueryList,MediaQueryListListener,NameList,NamedNodeMap,Node,NodeFilter,NodeIterator,NodeList,Notation,Plugin,PluginArray,ProcessingInstruction,SharedWorker,Text,TimeRanges,Treewalker,TypeInfo,UserDataHandler,Worker,WorkerGlobalScope,' +
+    'HTMLDocument,HTMLElement,HTMLAnchorElement,HTMLAppletElement,HTMLAudioElement,HTMLAreaElement,HTMLBaseElement,HTMLBaseFontElement,HTMLBodyElement,HTMLBRElement,HTMLButtonElement,HTMLCanvasElement,HTMLDirectoryElement,HTMLDivElement,HTMLDListElement,HTMLEmbedElement,HTMLFieldSetElement,HTMLFontElement,HTMLFormElement,HTMLFrameElement,HTMLFrameSetElement,HTMLHeadElement,HTMLHeadingElement,HTMLHtmlElement,HTMLHRElement,HTMLIFrameElement,HTMLImageElement,HTMLInputElement,HTMLKeygenElement,HTMLLabelElement,HTMLLIElement,HTMLLinkElement,HTMLMapElement,HTMLMenuElement,HTMLMetaElement,HTMLModElement,HTMLObjectElement,HTMLOListElement,HTMLOptGroupElement,HTMLOptionElement,HTMLOutputElement,HTMLParagraphElement,HTMLParamElement,HTMLPreElement,HTMLQuoteElement,HTMLScriptElement,HTMLSelectElement,HTMLSourceElement,HTMLSpanElement,HTMLStyleElement,HTMLTableElement,HTMLTableCaptionElement,HTMLTableCellElement,HTMLTableDataCellElement,HTMLTableHeaderCellElement,HTMLTableColElement,HTMLTableRowElement,HTMLTableSectionElement,HTMLTextAreaElement,HTMLTimeElement,HTMLTitleElement,HTMLTrackElement,HTMLUListElement,HTMLUnknownElement,HTMLVideoElement,' +
+    'HTMLCanvasElement,CanvasRenderingContext2D,CanvasGradient,CanvasPattern,TextMetrics,ImageData,CanvasPixelArray,HTMLAudioElement,HTMLVideoElement,NotifyAudioAvailableEvent,HTMLCollection,HTMLAllCollection,HTMLFormControlsCollection,HTMLOptionsCollection,HTMLPropertiesCollection,DOMTokenList,DOMSettableTokenList,DOMStringMap,RadioNodeList,' +
+    'SVGDocument,SVGElement,SVGAElement,SVGAltGlyphElement,SVGAltGlyphDefElement,SVGAltGlyphItemElement,SVGAnimationElement,SVGAnimateElement,SVGAnimateColorElement,SVGAnimateMotionElement,SVGAnimateTransformElement,SVGSetElement,SVGCircleElement,SVGClipPathElement,SVGColorProfileElement,SVGCursorElement,SVGDefsElement,SVGDescElement,SVGEllipseElement,SVGFilterElement,SVGFilterPrimitiveStandardAttributes,SVGFEBlendElement,SVGFEColorMatrixElement,SVGFEComponentTransferElement,SVGFECompositeElement,SVGFEConvolveMatrixElement,SVGFEDiffuseLightingElement,SVGFEDisplacementMapElement,SVGFEDistantLightElement,SVGFEFloodElement,SVGFEGaussianBlurElement,SVGFEImageElement,SVGFEMergeElement,SVGFEMergeNodeElement,SVGFEMorphologyElement,SVGFEOffsetElement,SVGFEPointLightElement,SVGFESpecularLightingElement,SVGFESpotLightElement,SVGFETileElement,SVGFETurbulenceElement,SVGComponentTransferFunctionElement,SVGFEFuncRElement,SVGFEFuncGElement,SVGFEFuncBElement,SVGFEFuncAElement,SVGFontElement,SVGFontFaceElement,SVGFontFaceFormatElement,SVGFontFaceNameElement,SVGFontFaceSrcElement,SVGFontFaceUriElement,SVGForeignObjectElement,SVGGElement,SVGGlyphElement,SVGGlyphRefElement,SVGGradientElement,SVGLinearGradientElement,SVGRadialGradientElement,SVGHKernElement,SVGImageElement,SVGLineElement,SVGMarkerElement,SVGMaskElement,SVGMetadataElement,SVGMissingGlyphElement,SVGMPathElement,SVGPathElement,SVGPatternElement,SVGPolylineElement,SVGPolygonElement,SVGRectElement,SVGScriptElement,SVGStopElement,SVGStyleElement,SVGSVGElement,SVGSwitchElement,SVGSymbolElement,SVGTextElement,SVGTextPathElement,SVGTitleElement,SVGTRefElement,SVGTSpanElement,SVGUseElement,SVGViewElement,SVGVKernElement,' +
+    'SVGAngle,SVGColor,SVGICCColor,SVGElementInstance,SVGElementInstanceList,SVGLength,SVGLengthList,SVGMatrix,SVGNumber,SVGNumberList,SVGPaint,SVGPoint,SVGPointList,SVGPreserveAspectRatio,SVGRect,SVGStringList,SVGTransform,SVGTransformList,' +
+    'SVGAnimatedAngle,SVGAnimatedBoolean,SVGAnimatedEnumeration,SVGAnimatedInteger,SVGAnimatedLength,SVGAnimatedLengthList,SVGAnimatedNumber,SVGAnimatedNumberList,SVGAnimatedPreserveAspectRatio,SVGAnimatedRect,SVGAnimatedString,SVGAnimatedTransformList,' +
+    'SVGPathSegList,SVGPathSeg,SVGPathSegArcAbs,SVGPathSegArcRel,SVGPathSegClosePath,SVGPathSegCurvetoCubicAbs,SVGPathSegCurvetoCubicRel,SVGPathSegCurvetoCubicSmoothAbs,SVGPathSegCurvetoCubicSmoothRel,SVGPathSegCurvetoQuadraticAbs,SVGPathSegCurvetoQuadraticRel,SVGPathSegCurvetoQuadraticSmoothAbs,SVGPathSegCurvetoQuadraticSmoothRel,SVGPathSegLinetoAbs,SVGPathSegLinetoHorizontalAbs,SVGPathSegLinetoHorizontalRel,SVGPathSegLinetoRel,SVGPathSegLinetoVerticalAbs,SVGPathSegLinetoVerticalRel,SVGPathSegMovetoAbs,SVGPathSegMovetoRel,ElementTimeControl,TimeEvent,SVGAnimatedPathData,' +
+    'SVGAnimatedPoints,SVGColorProfileRule,SVGCSSRule,SVGExternalResourcesRequired,SVGFitToViewBox,SVGLangSpace,SVGLocatable,SVGRenderingIntent,SVGStylable,SVGTests,SVGTextContentElement,SVGTextPositioningElement,SVGTransformable,SVGUnitTypes,SVGURIReference,SVGViewSpec,SVGZoomAndPan');
+
+/**
+ * Order of operation ENUMs.
+ * https://developer.mozilla.org/en/Sheets/Reference/Operators/Operator_Precedence
+ */
+Blockly.Sheets.ORDER_ATOMIC = 0;           // 0 "" ...
+Blockly.Sheets.ORDER_NEW = 1.1;            // new
+Blockly.Sheets.ORDER_MEMBER = 1.2;         // . []
+Blockly.Sheets.ORDER_FUNCTION_CALL = 2;    // ()
+Blockly.Sheets.ORDER_INCREMENT = 3;        // ++
+Blockly.Sheets.ORDER_DECREMENT = 3;        // --
+Blockly.Sheets.ORDER_BITWISE_NOT = 4.1;    // ~
+Blockly.Sheets.ORDER_UNARY_PLUS = 4.2;     // +
+Blockly.Sheets.ORDER_UNARY_NEGATION = 4.3; // -
+Blockly.Sheets.ORDER_LOGICAL_NOT = 4.4;    // !
+Blockly.Sheets.ORDER_TYPEOF = 4.5;         // typeof
+Blockly.Sheets.ORDER_VOID = 4.6;           // void
+Blockly.Sheets.ORDER_DELETE = 4.7;         // delete
+Blockly.Sheets.ORDER_DIVISION = 5.1;       // /
+Blockly.Sheets.ORDER_MULTIPLICATION = 5.2; // *
+Blockly.Sheets.ORDER_MODULUS = 5.3;        // %
+Blockly.Sheets.ORDER_SUBTRACTION = 6.1;    // -
+Blockly.Sheets.ORDER_ADDITION = 6.2;       // +
+Blockly.Sheets.ORDER_BITWISE_SHIFT = 7;    // << >> >>>
+Blockly.Sheets.ORDER_RELATIONAL = 8;       // < <= > >=
+Blockly.Sheets.ORDER_IN = 8;               // in
+Blockly.Sheets.ORDER_INSTANCEOF = 8;       // instanceof
+Blockly.Sheets.ORDER_EQUALITY = 9;         // == != === !==
+Blockly.Sheets.ORDER_BITWISE_AND = 10;     // &
+Blockly.Sheets.ORDER_BITWISE_XOR = 11;     // ^
+Blockly.Sheets.ORDER_BITWISE_OR = 12;      // |
+Blockly.Sheets.ORDER_LOGICAL_AND = 13;     // &&
+Blockly.Sheets.ORDER_LOGICAL_OR = 14;      // ||
+Blockly.Sheets.ORDER_CONDITIONAL = 15;     // ?:
+Blockly.Sheets.ORDER_ASSIGNMENT = 16;      // = += -= *= /= %= <<= >>= ...
+Blockly.Sheets.ORDER_COMMA = 17;           // ,
+Blockly.Sheets.ORDER_NONE = 99;            // (...)
+
+/**
+ * List of outer-inner pairings that do NOT require parentheses.
+ * @type {!Array.<!Array.<number>>}
+ */
+Blockly.Sheets.ORDER_OVERRIDES = [
+  // (foo()).bar -> foo().bar
+  // (foo())[0] -> foo()[0]
+  [Blockly.Sheets.ORDER_FUNCTION_CALL, Blockly.Sheets.ORDER_MEMBER],
+  // (foo())() -> foo()()
+  [Blockly.Sheets.ORDER_FUNCTION_CALL, Blockly.Sheets.ORDER_FUNCTION_CALL],
+  // (foo.bar).baz -> foo.bar.baz
+  // (foo.bar)[0] -> foo.bar[0]
+  // (foo[0]).bar -> foo[0].bar
+  // (foo[0])[1] -> foo[0][1]
+  [Blockly.Sheets.ORDER_MEMBER, Blockly.Sheets.ORDER_MEMBER],
+  // (foo.bar)() -> foo.bar()
+  // (foo[0])() -> foo[0]()
+  [Blockly.Sheets.ORDER_MEMBER, Blockly.Sheets.ORDER_FUNCTION_CALL],
+
+  // !(!foo) -> !!foo
+  [Blockly.Sheets.ORDER_LOGICAL_NOT, Blockly.Sheets.ORDER_LOGICAL_NOT],
+  // a * (b * c) -> a * b * c
+  [Blockly.Sheets.ORDER_MULTIPLICATION, Blockly.Sheets.ORDER_MULTIPLICATION],
+  // a + (b + c) -> a + b + c
+  [Blockly.Sheets.ORDER_ADDITION, Blockly.Sheets.ORDER_ADDITION],
+  // a && (b && c) -> a && b && c
+  [Blockly.Sheets.ORDER_LOGICAL_AND, Blockly.Sheets.ORDER_LOGICAL_AND],
+  // a || (b || c) -> a || b || c
+  [Blockly.Sheets.ORDER_LOGICAL_OR, Blockly.Sheets.ORDER_LOGICAL_OR]
+];
+
+/**
+ * Initialise the database of variable names.
+ * @param {!Blockly.Workspace} workspace Workspace to generate code from.
+ */
+Blockly.Sheets.init = function(workspace) {
+  // Create a dictionary of definitions to be printed before the code.
+  Blockly.Sheets.definitions_ = Object.create(null);
+  // Create a dictionary mapping desired function names in definitions_
+  // to actual function names (to avoid collisions with user functions).
+  Blockly.Sheets.functionNames_ = Object.create(null);
+
+  if (!Blockly.Sheets.variableDB_) {
+    Blockly.Sheets.variableDB_ =
+        new Blockly.Names(Blockly.Sheets.RESERVED_WORDS_);
+  } else {
+    Blockly.Sheets.variableDB_.reset();
+  }
+
+  var defvars = [];
+  var variables = workspace.getAllVariables();
+  if (variables.length) {
+    for (var i = 0; i < variables.length; i++) {
+      defvars[i] = Blockly.Sheets.variableDB_.getName(variables[i].name,
+          Blockly.Variables.NAME_TYPE);
+    }
+    Blockly.Sheets.definitions_['variables'] =
+        'var ' + defvars.join(', ') + ';';
+  }
+};
+
+/**
+ * Prepend the generated code with the variable definitions.
+ * @param {string} code Generated code.
+ * @return {string} Completed code.
+ */
+Blockly.Sheets.finish = function(code) {
+  // Convert the definitions dictionary into a list.
+  var definitions = [];
+  for (var name in Blockly.Sheets.definitions_) {
+    definitions.push(Blockly.Sheets.definitions_[name]);
+  }
+  // Clean up temporary data.
+  delete Blockly.Sheets.definitions_;
+  delete Blockly.Sheets.functionNames_;
+  Blockly.Sheets.variableDB_.reset();
+  return definitions.join('\n\n') + '\n\n\n' + code;
+};
+
+/**
+ * Naked values are top-level blocks with outputs that aren't plugged into
+ * anything.  A trailing semicolon is needed to make this legal.
+ * @param {string} line Line of generated code.
+ * @return {string} Legal line of code.
+ */
+Blockly.Sheets.scrubNakedValue = function(line) {
+  return line + ';\n';
+};
+
+/**
+ * Encode a string as a properly escaped Sheets string, complete with
+ * quotes.
+ * @param {string} string Text to encode.
+ * @return {string} Sheets string.
+ * @private
+ */
+Blockly.Sheets.quote_ = function(string) {
+  // Can't use goog.string.quote since Google's style guide recommends
+  // JS string literals use single quotes.
+  string = string.replace(/\\/g, '\\\\')
+                 .replace(/\n/g, '\\\n')
+                 .replace(/'/g, '\\\'');
+  return '\'' + string + '\'';
+};
+
+/**
+ * Common tasks for generating Sheets from blocks.
+ * Handles comments for the specified block and any connected value blocks.
+ * Calls any statements following this block.
+ * @param {!Blockly.Block} block The current block.
+ * @param {string} code The Sheets code created for this block.
+ * @return {string} Sheets code with comments and subsequent blocks added.
+ * @private
+ */
+Blockly.Sheets.scrub_ = function(block, code) {
+  var commentCode = '';
+  // Only collect comments for blocks that aren't inline.
+  if (!block.outputConnection || !block.outputConnection.targetConnection) {
+    // Collect comment for this block.
+    var comment = block.getCommentText();
+    comment = Blockly.utils.wrap(comment, Blockly.Sheets.COMMENT_WRAP - 3);
+    if (comment) {
+      if (block.getProcedureDef) {
+        // Use a comment block for function comments.
+        commentCode += '/**\n' +
+                       Blockly.Sheets.prefixLines(comment + '\n', ' * ') +
+                       ' */\n';
+      } else {
+        commentCode += Blockly.Sheets.prefixLines(comment + '\n', '// ');
+      }
+    }
+    // Collect comments for all value arguments.
+    // Don't collect comments for nested statements.
+    for (var i = 0; i < block.inputList.length; i++) {
+      if (block.inputList[i].type == Blockly.INPUT_VALUE) {
+        var childBlock = block.inputList[i].connection.targetBlock();
+        if (childBlock) {
+          var comment = Blockly.Sheets.allNestedComments(childBlock);
+          if (comment) {
+            commentCode += Blockly.Sheets.prefixLines(comment, '// ');
+          }
+        }
+      }
+    }
+  }
+  var nextBlock = block.nextConnection && block.nextConnection.targetBlock();
+  var nextCode = Blockly.Sheets.blockToCode(nextBlock);
+  return commentCode + code + nextCode;
+};
+
+/**
+ * Gets a property and adjusts the value while taking into account indexing.
+ * @param {!Blockly.Block} block The block.
+ * @param {string} atId The property ID of the element to get.
+ * @param {number=} opt_delta Value to add.
+ * @param {boolean=} opt_negate Whether to negate the value.
+ * @param {number=} opt_order The highest order acting on this value.
+ * @return {string|number}
+ */
+Blockly.Sheets.getAdjusted = function(block, atId, opt_delta, opt_negate,
+    opt_order) {
+  var delta = opt_delta || 0;
+  var order = opt_order || Blockly.Sheets.ORDER_NONE;
+  if (block.workspace.options.oneBasedIndex) {
+    delta--;
+  }
+  var defaultAtIndex = block.workspace.options.oneBasedIndex ? '1' : '0';
+  if (delta > 0) {
+    var at = Blockly.Sheets.valueToCode(block, atId,
+        Blockly.Sheets.ORDER_ADDITION) || defaultAtIndex;
+  } else if (delta < 0) {
+    var at = Blockly.Sheets.valueToCode(block, atId,
+        Blockly.Sheets.ORDER_SUBTRACTION) || defaultAtIndex;
+  } else if (opt_negate) {
+    var at = Blockly.Sheets.valueToCode(block, atId,
+        Blockly.Sheets.ORDER_UNARY_NEGATION) || defaultAtIndex;
+  } else {
+    var at = Blockly.Sheets.valueToCode(block, atId, order) ||
+        defaultAtIndex;
+  }
+
+  if (Blockly.isNumber(at)) {
+    // If the index is a naked number, adjust it right now.
+    at = parseFloat(at) + delta;
+    if (opt_negate) {
+      at = -at;
+    }
+  } else {
+    // If the index is dynamic, adjust it in code.
+    if (delta > 0) {
+      at = at + ' + ' + delta;
+      var innerOrder = Blockly.Sheets.ORDER_ADDITION;
+    } else if (delta < 0) {
+      at = at + ' - ' + -delta;
+      var innerOrder = Blockly.Sheets.ORDER_SUBTRACTION;
+    }
+    if (opt_negate) {
+      if (delta) {
+        at = '-(' + at + ')';
+      } else {
+        at = '-' + at;
+      }
+      var innerOrder = Blockly.Sheets.ORDER_UNARY_NEGATION;
+    }
+    innerOrder = Math.floor(innerOrder);
+    order = Math.floor(order);
+    if (innerOrder && order >= innerOrder) {
+      at = '(' + at + ')';
+    }
+  }
+  return at;
+};
+</script>
+<script>
+/**
+ * @fileoverview Generating Sheets language for sheets blocks.
+ * @author zachdecook@gmail.com (Zach DeCook)
+ */
+Blockly.Sheets['sheets_start'] = function(block) {
+  var value_name = Blockly.Sheets.valueToCode(block, 'NAME', Blockly.Sheets.ORDER_ATOMIC);
+  var code = '=' + value_name;
+  return code;
+};</script>
+<script>
+/**
+ * @license
+ * Visual Blocks Language
+ *
+ * Copyright 2012 Google Inc.
+ * https://developers.google.com/blockly/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @fileoverview Generating Sheets for colour blocks.
+ * @author fraser@google.com (Neil Fraser)
+ * @author zachdecook@gmail.com (Zach DeCook)
+ */
+'use strict';
+
+goog.provide('Blockly.Sheets.colour');
+
+goog.require('Blockly.Sheets');
+
+
+Blockly.Sheets['colour_picker'] = function(block) {
+  // Colour picker.
+  var code = '\'' + block.getFieldValue('COLOUR') + '\'';
+  return [code, Blockly.Sheets.ORDER_ATOMIC];
+};
+
+Blockly.Sheets['colour_random'] = function(block) {
+  // Generate a random colour.
+  var functionName = Blockly.Sheets.provideFunction_(
+      'colourRandom',
+      ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ + '() {',
+        '  var num = Math.floor(Math.random() * Math.pow(2, 24));',
+        '  return \'#\' + (\'00000\' + num.toString(16)).substr(-6);',
+        '}']);
+  var code = functionName + '()';
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['colour_rgb'] = function(block) {
+  // Compose a colour from RGB components expressed as percentages.
+  var red = Blockly.Sheets.valueToCode(block, 'RED',
+      Blockly.Sheets.ORDER_COMMA) || 0;
+  var green = Blockly.Sheets.valueToCode(block, 'GREEN',
+      Blockly.Sheets.ORDER_COMMA) || 0;
+  var blue = Blockly.Sheets.valueToCode(block, 'BLUE',
+      Blockly.Sheets.ORDER_COMMA) || 0;
+  var functionName = Blockly.Sheets.provideFunction_(
+      'colourRgb',
+      ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+          '(r, g, b) {',
+       '  r = Math.max(Math.min(Number(r), 100), 0) * 2.55;',
+       '  g = Math.max(Math.min(Number(g), 100), 0) * 2.55;',
+       '  b = Math.max(Math.min(Number(b), 100), 0) * 2.55;',
+       '  r = (\'0\' + (Math.round(r) || 0).toString(16)).slice(-2);',
+       '  g = (\'0\' + (Math.round(g) || 0).toString(16)).slice(-2);',
+       '  b = (\'0\' + (Math.round(b) || 0).toString(16)).slice(-2);',
+       '  return \'#\' + r + g + b;',
+       '}']);
+  var code = functionName + '(' + red + ', ' + green + ', ' + blue + ')';
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['colour_blend'] = function(block) {
+  // Blend two colours together.
+  var c1 = Blockly.Sheets.valueToCode(block, 'COLOUR1',
+      Blockly.Sheets.ORDER_COMMA) || '\'#000000\'';
+  var c2 = Blockly.Sheets.valueToCode(block, 'COLOUR2',
+      Blockly.Sheets.ORDER_COMMA) || '\'#000000\'';
+  var ratio = Blockly.Sheets.valueToCode(block, 'RATIO',
+      Blockly.Sheets.ORDER_COMMA) || 0.5;
+  var functionName = Blockly.Sheets.provideFunction_(
+      'colourBlend',
+      ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+          '(c1, c2, ratio) {',
+       '  ratio = Math.max(Math.min(Number(ratio), 1), 0);',
+       '  var r1 = parseInt(c1.substring(1, 3), 16);',
+       '  var g1 = parseInt(c1.substring(3, 5), 16);',
+       '  var b1 = parseInt(c1.substring(5, 7), 16);',
+       '  var r2 = parseInt(c2.substring(1, 3), 16);',
+       '  var g2 = parseInt(c2.substring(3, 5), 16);',
+       '  var b2 = parseInt(c2.substring(5, 7), 16);',
+       '  var r = Math.round(r1 * (1 - ratio) + r2 * ratio);',
+       '  var g = Math.round(g1 * (1 - ratio) + g2 * ratio);',
+       '  var b = Math.round(b1 * (1 - ratio) + b2 * ratio);',
+       '  r = (\'0\' + (r || 0).toString(16)).slice(-2);',
+       '  g = (\'0\' + (g || 0).toString(16)).slice(-2);',
+       '  b = (\'0\' + (b || 0).toString(16)).slice(-2);',
+       '  return \'#\' + r + g + b;',
+       '}']);
+  var code = functionName + '(' + c1 + ', ' + c2 + ', ' + ratio + ')';
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+</script>
+<script>
+/**
+ * @license
+ * Visual Blocks Language
+ *
+ * Copyright 2012 Google Inc.
+ * https://developers.google.com/blockly/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @fileoverview Generating Sheets for list blocks.
+ * @author fraser@google.com (Neil Fraser)
+ * @author zachdecook@gmail.com (Zach DeCook)
+ */
+'use strict';
+
+goog.provide('Blockly.Sheets.lists');
+
+goog.require('Blockly.Sheets');
+
+
+Blockly.Sheets['lists_create_empty'] = function(block) {
+  // Create an empty list.
+  return ['[]', Blockly.Sheets.ORDER_ATOMIC];
+};
+
+Blockly.Sheets['lists_create_with'] = function(block) {
+  // Create a list with any number of elements of any type.
+  var elements = new Array(block.itemCount_);
+  for (var i = 0; i < block.itemCount_; i++) {
+    elements[i] = Blockly.Sheets.valueToCode(block, 'ADD' + i,
+        Blockly.Sheets.ORDER_COMMA) || 'null';
+  }
+  var code = '[' + elements.join(', ') + ']';
+  return [code, Blockly.Sheets.ORDER_ATOMIC];
+};
+
+Blockly.Sheets['lists_repeat'] = function(block) {
+  // Create a list with one element repeated.
+  var functionName = Blockly.Sheets.provideFunction_(
+      'listsRepeat',
+      ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+          '(value, n) {',
+       '  var array = [];',
+       '  for (var i = 0; i < n; i++) {',
+       '    array[i] = value;',
+       '  }',
+       '  return array;',
+       '}']);
+  var element = Blockly.Sheets.valueToCode(block, 'ITEM',
+      Blockly.Sheets.ORDER_COMMA) || 'null';
+  var repeatCount = Blockly.Sheets.valueToCode(block, 'NUM',
+      Blockly.Sheets.ORDER_COMMA) || '0';
+  var code = functionName + '(' + element + ', ' + repeatCount + ')';
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['lists_length'] = function(block) {
+  // String or array length.
+  var list = Blockly.Sheets.valueToCode(block, 'VALUE',
+      Blockly.Sheets.ORDER_MEMBER) || '[]';
+  return [list + '.length', Blockly.Sheets.ORDER_MEMBER];
+};
+
+Blockly.Sheets['lists_isEmpty'] = function(block) {
+  // Is the string null or array empty?
+  var list = Blockly.Sheets.valueToCode(block, 'VALUE',
+      Blockly.Sheets.ORDER_MEMBER) || '[]';
+  return ['!' + list + '.length', Blockly.Sheets.ORDER_LOGICAL_NOT];
+};
+
+Blockly.Sheets['lists_indexOf'] = function(block) {
+  // Find an item in the list.
+  var operator = block.getFieldValue('END') == 'FIRST' ?
+      'indexOf' : 'lastIndexOf';
+  var item = Blockly.Sheets.valueToCode(block, 'FIND',
+      Blockly.Sheets.ORDER_NONE) || '\'\'';
+  var list = Blockly.Sheets.valueToCode(block, 'VALUE',
+      Blockly.Sheets.ORDER_MEMBER) || '[]';
+  var code = list + '.' + operator + '(' + item + ')';
+  if (block.workspace.options.oneBasedIndex) {
+    return [code + ' + 1', Blockly.Sheets.ORDER_ADDITION];
+  }
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['lists_getIndex'] = function(block) {
+  // Get element at index.
+  // Note: Until January 2013 this block did not have MODE or WHERE inputs.
+  var mode = block.getFieldValue('MODE') || 'GET';
+  var where = block.getFieldValue('WHERE') || 'FROM_START';
+  var listOrder = (where == 'RANDOM') ? Blockly.Sheets.ORDER_COMMA :
+      Blockly.Sheets.ORDER_MEMBER;
+  var list = Blockly.Sheets.valueToCode(block, 'VALUE', listOrder) || '[]';
+
+  switch (where) {
+    case ('FIRST'):
+      if (mode == 'GET') {
+        var code = list + '[0]';
+        return [code, Blockly.Sheets.ORDER_MEMBER];
+      } else if (mode == 'GET_REMOVE') {
+        var code = list + '.shift()';
+        return [code, Blockly.Sheets.ORDER_MEMBER];
+      } else if (mode == 'REMOVE') {
+        return list + '.shift();\n';
+      }
+      break;
+    case ('LAST'):
+      if (mode == 'GET') {
+        var code = list + '.slice(-1)[0]';
+        return [code, Blockly.Sheets.ORDER_MEMBER];
+      } else if (mode == 'GET_REMOVE') {
+        var code = list + '.pop()';
+        return [code, Blockly.Sheets.ORDER_MEMBER];
+      } else if (mode == 'REMOVE') {
+        return list + '.pop();\n';
+      }
+      break;
+    case ('FROM_START'):
+      var at = Blockly.Sheets.getAdjusted(block, 'AT');
+      if (mode == 'GET') {
+        var code = list + '[' + at + ']';
+        return [code, Blockly.Sheets.ORDER_MEMBER];
+      } else if (mode == 'GET_REMOVE') {
+        var code = list + '.splice(' + at + ', 1)[0]';
+        return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+      } else if (mode == 'REMOVE') {
+        return list + '.splice(' + at + ', 1);\n';
+      }
+      break;
+    case ('FROM_END'):
+      var at = Blockly.Sheets.getAdjusted(block, 'AT', 1, true);
+      if (mode == 'GET') {
+        var code = list + '.slice(' + at + ')[0]';
+        return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+      } else if (mode == 'GET_REMOVE') {
+        var code = list + '.splice(' + at + ', 1)[0]';
+        return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+      } else if (mode == 'REMOVE') {
+        return list + '.splice(' + at + ', 1);';
+      }
+      break;
+    case ('RANDOM'):
+      var functionName = Blockly.Sheets.provideFunction_(
+          'listsGetRandomItem',
+          ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+              '(list, remove) {',
+           '  var x = Math.floor(Math.random() * list.length);',
+           '  if (remove) {',
+           '    return list.splice(x, 1)[0];',
+           '  } else {',
+           '    return list[x];',
+           '  }',
+           '}']);
+      code = functionName + '(' + list + ', ' + (mode != 'GET') + ')';
+      if (mode == 'GET' || mode == 'GET_REMOVE') {
+        return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+      } else if (mode == 'REMOVE') {
+        return code + ';\n';
+      }
+      break;
+  }
+  throw 'Unhandled combination (lists_getIndex).';
+};
+
+Blockly.Sheets['lists_setIndex'] = function(block) {
+  // Set element at index.
+  // Note: Until February 2013 this block did not have MODE or WHERE inputs.
+  var list = Blockly.Sheets.valueToCode(block, 'LIST',
+      Blockly.Sheets.ORDER_MEMBER) || '[]';
+  var mode = block.getFieldValue('MODE') || 'GET';
+  var where = block.getFieldValue('WHERE') || 'FROM_START';
+  var value = Blockly.Sheets.valueToCode(block, 'TO',
+      Blockly.Sheets.ORDER_ASSIGNMENT) || 'null';
+  // Cache non-trivial values to variables to prevent repeated look-ups.
+  // Closure, which accesses and modifies 'list'.
+  function cacheList() {
+    if (list.match(/^\w+$/)) {
+      return '';
+    }
+    var listVar = Blockly.Sheets.variableDB_.getDistinctName(
+        'tmpList', Blockly.Variables.NAME_TYPE);
+    var code = 'var ' + listVar + ' = ' + list + ';\n';
+    list = listVar;
+    return code;
+  }
+  switch (where) {
+    case ('FIRST'):
+      if (mode == 'SET') {
+        return list + '[0] = ' + value + ';\n';
+      } else if (mode == 'INSERT') {
+        return list + '.unshift(' + value + ');\n';
+      }
+      break;
+    case ('LAST'):
+      if (mode == 'SET') {
+        var code = cacheList();
+        code += list + '[' + list + '.length - 1] = ' + value + ';\n';
+        return code;
+      } else if (mode == 'INSERT') {
+        return list + '.push(' + value + ');\n';
+      }
+      break;
+    case ('FROM_START'):
+      var at = Blockly.Sheets.getAdjusted(block, 'AT');
+      if (mode == 'SET') {
+        return list + '[' + at + '] = ' + value + ';\n';
+      } else if (mode == 'INSERT') {
+        return list + '.splice(' + at + ', 0, ' + value + ');\n';
+      }
+      break;
+    case ('FROM_END'):
+      var at = Blockly.Sheets.getAdjusted(block, 'AT', 1, false,
+          Blockly.Sheets.ORDER_SUBTRACTION);
+      var code = cacheList();
+      if (mode == 'SET') {
+        code += list + '[' + list + '.length - ' + at + '] = ' + value + ';\n';
+        return code;
+      } else if (mode == 'INSERT') {
+        code += list + '.splice(' + list + '.length - ' + at + ', 0, ' + value +
+            ');\n';
+        return code;
+      }
+      break;
+    case ('RANDOM'):
+      var code = cacheList();
+      var xVar = Blockly.Sheets.variableDB_.getDistinctName(
+          'tmpX', Blockly.Variables.NAME_TYPE);
+      code += 'var ' + xVar + ' = Math.floor(Math.random() * ' + list +
+          '.length);\n';
+      if (mode == 'SET') {
+        code += list + '[' + xVar + '] = ' + value + ';\n';
+        return code;
+      } else if (mode == 'INSERT') {
+        code += list + '.splice(' + xVar + ', 0, ' + value + ');\n';
+        return code;
+      }
+      break;
+  }
+  throw 'Unhandled combination (lists_setIndex).';
+};
+
+/**
+ * Returns an expression calculating the index into a list.
+ * @private
+ * @param {string} listName Name of the list, used to calculate length.
+ * @param {string} where The method of indexing, selected by dropdown in Blockly
+ * @param {string=} opt_at The optional offset when indexing from start/end.
+ * @return {string} Index expression.
+ */
+Blockly.Sheets.lists.getIndex_ = function(listName, where, opt_at) {
+  if (where == 'FIRST') {
+    return '0';
+  } else if (where == 'FROM_END') {
+    return listName + '.length - 1 - ' + opt_at;
+  } else if (where == 'LAST') {
+    return listName + '.length - 1';
+  } else {
+    return opt_at;
+  }
+};
+
+Blockly.Sheets['lists_getSublist'] = function(block) {
+  // Get sublist.
+  var list = Blockly.Sheets.valueToCode(block, 'LIST',
+      Blockly.Sheets.ORDER_MEMBER) || '[]';
+  var where1 = block.getFieldValue('WHERE1');
+  var where2 = block.getFieldValue('WHERE2');
+  if (where1 == 'FIRST' && where2 == 'LAST') {
+    var code = list + '.slice(0)';
+  } else if (list.match(/^\w+$/) ||
+      (where1 != 'FROM_END' && where2 == 'FROM_START')) {
+    // If the list is a variable or doesn't require a call for length, don't
+    // generate a helper function.
+    switch (where1) {
+      case 'FROM_START':
+        var at1 = Blockly.Sheets.getAdjusted(block, 'AT1');
+        break;
+      case 'FROM_END':
+        var at1 = Blockly.Sheets.getAdjusted(block, 'AT1', 1, false,
+            Blockly.Sheets.ORDER_SUBTRACTION);
+        at1 = list + '.length - ' + at1;
+        break;
+      case 'FIRST':
+        var at1 = '0';
+        break;
+      default:
+        throw 'Unhandled option (lists_getSublist).';
+    }
+    switch (where2) {
+      case 'FROM_START':
+        var at2 = Blockly.Sheets.getAdjusted(block, 'AT2', 1);
+        break;
+      case 'FROM_END':
+        var at2 = Blockly.Sheets.getAdjusted(block, 'AT2', 0, false,
+            Blockly.Sheets.ORDER_SUBTRACTION);
+        at2 = list + '.length - ' + at2;
+        break;
+      case 'LAST':
+        var at2 = list + '.length';
+        break;
+      default:
+        throw 'Unhandled option (lists_getSublist).';
+    }
+    code = list + '.slice(' + at1 + ', ' + at2 + ')';
+  } else {
+    var at1 = Blockly.Sheets.getAdjusted(block, 'AT1');
+    var at2 = Blockly.Sheets.getAdjusted(block, 'AT2');
+    var getIndex_ = Blockly.Sheets.lists.getIndex_;
+    var wherePascalCase = {'FIRST': 'First', 'LAST': 'Last',
+        'FROM_START': 'FromStart', 'FROM_END': 'FromEnd'};
+    var functionName = Blockly.Sheets.provideFunction_(
+        'subsequence' + wherePascalCase[where1] + wherePascalCase[where2],
+        ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+            '(sequence' +
+            // The value for 'FROM_END' and'FROM_START' depends on `at` so
+            // we add it as a parameter.
+            ((where1 == 'FROM_END' || where1 == 'FROM_START') ? ', at1' : '') +
+            ((where2 == 'FROM_END' || where2 == 'FROM_START') ? ', at2' : '') +
+            ') {',
+          '  var start = ' + getIndex_('sequence', where1, 'at1') + ';',
+          '  var end = ' + getIndex_('sequence', where2, 'at2') + ' + 1;',
+          '  return sequence.slice(start, end);',
+          '}']);
+    var code = functionName + '(' + list +
+        // The value for 'FROM_END' and 'FROM_START' depends on `at` so we
+        // pass it.
+        ((where1 == 'FROM_END' || where1 == 'FROM_START') ? ', ' + at1 : '') +
+        ((where2 == 'FROM_END' || where2 == 'FROM_START') ? ', ' + at2 : '') +
+        ')';
+  }
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['lists_sort'] = function(block) {
+  // Block for sorting a list.
+  var list = Blockly.Sheets.valueToCode(block, 'LIST',
+      Blockly.Sheets.ORDER_FUNCTION_CALL) || '[]';
+  var direction = block.getFieldValue('DIRECTION') === '1' ? 1 : -1;
+  var type = block.getFieldValue('TYPE');
+  var getCompareFunctionName = Blockly.Sheets.provideFunction_(
+      'listsGetSortCompare',
+      ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+          '(type, direction) {',
+       '  var compareFuncs = {',
+       '    "NUMERIC": function(a, b) {',
+       '        return parseFloat(a) - parseFloat(b); },',
+       '    "TEXT": function(a, b) {',
+       '        return a.toString() > b.toString() ? 1 : -1; },',
+       '    "IGNORE_CASE": function(a, b) {',
+       '        return a.toString().toLowerCase() > ' +
+          'b.toString().toLowerCase() ? 1 : -1; },',
+       '  };',
+       '  var compare = compareFuncs[type];',
+       '  return function(a, b) { return compare(a, b) * direction; }',
+       '}']);
+  return [list + '.slice().sort(' +
+      getCompareFunctionName + '("' + type + '", ' + direction + '))',
+      Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['lists_split'] = function(block) {
+  // Block for splitting text into a list, or joining a list into text.
+  var input = Blockly.Sheets.valueToCode(block, 'INPUT',
+      Blockly.Sheets.ORDER_MEMBER);
+  var delimiter = Blockly.Sheets.valueToCode(block, 'DELIM',
+      Blockly.Sheets.ORDER_NONE) || '\'\'';
+  var mode = block.getFieldValue('MODE');
+  if (mode == 'SPLIT') {
+    if (!input) {
+      input = '\'\'';
+    }
+    var functionName = 'split';
+  } else if (mode == 'JOIN') {
+    if (!input) {
+      input = '[]';
+    }
+    var functionName = 'join';
+  } else {
+    throw 'Unknown mode: ' + mode;
+  }
+  var code = input + '.' + functionName + '(' + delimiter + ')';
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['lists_reverse'] = function(block) {
+  // Block for reversing a list.
+  var list = Blockly.Sheets.valueToCode(block, 'LIST',
+      Blockly.Sheets.ORDER_FUNCTION_CALL) || '[]';
+  var code = list + '.slice().reverse()';
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+</script>
+<script>
+/**
+ * @license
+ * Visual Blocks Language
+ *
+ * Copyright 2012 Google Inc.
+ * https://developers.google.com/blockly/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @fileoverview Generating Sheets for logic blocks.
+ * @author q.neutron@gmail.com (Quynh Neutron)
+ * @author zachdecook@gmail.com (Zach DeCook)
+ */
+'use strict';
+
+goog.provide('Blockly.Sheets.logic');
+
+goog.require('Blockly.Sheets');
+
+Blockly.Sheets['controls_if'] = function(block) {
+  // If/elseif/else condition.
+  var n = 0;
+  var code = '', branchCode, conditionCode;
+  do {
+    conditionCode = Blockly.Sheets.valueToCode(block, 'IF' + n,
+      Blockly.Sheets.ORDER_NONE) || 'false';
+    branchCode = Blockly.Sheets.statementToCode(block, 'DO' + n);
+    code += (n > 0 ? ' else ' : '') +
+        'IF(' + conditionCode + ',' + branchCode;
+
+    ++n;
+  } while (block.getInput('IF' + n));
+
+  if (block.getInput('ELSE')) {
+    branchCode = Blockly.Sheets.statementToCode(block, 'ELSE');
+    code += ' ,\n' + branchCode + '}';
+  }
+  else
+  {
+	  code+=")";
+  }
+  return code + '\n';
+};
+
+Blockly.Sheets['controls_ifelse'] = Blockly.Sheets['controls_if'];
+
+Blockly.Sheets['logic_compare'] = function(block) {
+  // Comparison operator.
+  var OPERATORS = {
+    'EQ': '==',
+    'NEQ': '!=',
+    'LT': '<',
+    'LTE': '<=',
+    'GT': '>',
+    'GTE': '>='
+  };
+  var operator = OPERATORS[block.getFieldValue('OP')];
+  var order = (operator == '==' || operator == '!=') ?
+      Blockly.Sheets.ORDER_EQUALITY : Blockly.Sheets.ORDER_RELATIONAL;
+  var argument0 = Blockly.Sheets.valueToCode(block, 'A', order) || '0';
+  var argument1 = Blockly.Sheets.valueToCode(block, 'B', order) || '0';
+  var code = argument0 + ' ' + operator + ' ' + argument1;
+  return [code, order];
+};
+
+Blockly.Sheets['logic_operation'] = function(block) {
+  // Operations 'and', 'or'.
+  var operator = (block.getFieldValue('OP') == 'AND') ? '&&' : '||';
+  var order = (operator == '&&') ? Blockly.Sheets.ORDER_LOGICAL_AND :
+      Blockly.Sheets.ORDER_LOGICAL_OR;
+  var argument0 = Blockly.Sheets.valueToCode(block, 'A', order);
+  var argument1 = Blockly.Sheets.valueToCode(block, 'B', order);
+  if (!argument0 && !argument1) {
+    // If there are no arguments, then the return value is false.
+    argument0 = 'false';
+    argument1 = 'false';
+  } else {
+    // Single missing arguments have no effect on the return value.
+    var defaultArgument = (operator == '&&') ? 'true' : 'false';
+    if (!argument0) {
+      argument0 = defaultArgument;
+    }
+    if (!argument1) {
+      argument1 = defaultArgument;
+    }
+  }
+  var code = argument0 + ' ' + operator + ' ' + argument1;
+  return [code, order];
+};
+
+Blockly.Sheets['logic_negate'] = function(block) {
+  // Negation.
+  var order = Blockly.Sheets.ORDER_LOGICAL_NOT;
+  var argument0 = Blockly.Sheets.valueToCode(block, 'BOOL', order) ||
+      'true';
+  var code = '!' + argument0;
+  return [code, order];
+};
+
+Blockly.Sheets['logic_boolean'] = function(block) {
+  // Boolean values true and false.
+  var code = (block.getFieldValue('BOOL') == 'TRUE') ? 'true' : 'false';
+  return [code, Blockly.Sheets.ORDER_ATOMIC];
+};
+
+Blockly.Sheets['logic_null'] = function(block) {
+  // Null data type.
+  return ['null', Blockly.Sheets.ORDER_ATOMIC];
+};
+
+Blockly.Sheets['logic_ternary'] = function(block) {
+  // Ternary operator.
+  var value_if = Blockly.Sheets.valueToCode(block, 'IF',
+      Blockly.Sheets.ORDER_CONDITIONAL) || 'false';
+  var value_then = Blockly.Sheets.valueToCode(block, 'THEN',
+      Blockly.Sheets.ORDER_CONDITIONAL) || 'null';
+  var value_else = Blockly.Sheets.valueToCode(block, 'ELSE',
+      Blockly.Sheets.ORDER_CONDITIONAL) || 'null';
+  var code = value_if + ' ? ' + value_then + ' : ' + value_else;
+  return [code, Blockly.Sheets.ORDER_CONDITIONAL];
+};
+</script>
+<script>
+/**
+ * @license
+ * Visual Blocks Language
+ *
+ * Copyright 2012 Google Inc.
+ * https://developers.google.com/blockly/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @fileoverview Generating Sheets for loop blocks.
+ * @author fraser@google.com (Neil Fraser)
+ * @author zachdecook@gmail.com (Zach DeCook)
+ */
+'use strict';
+
+goog.provide('Blockly.Sheets.loops');
+
+goog.require('Blockly.Sheets');
+
+
+Blockly.Sheets['controls_repeat_ext'] = function(block) {
+  // Repeat n times.
+  if (block.getField('TIMES')) {
+    // Internal number.
+    var repeats = String(Number(block.getFieldValue('TIMES')));
+  } else {
+    // External number.
+    var repeats = Blockly.Sheets.valueToCode(block, 'TIMES',
+        Blockly.Sheets.ORDER_ASSIGNMENT) || '0';
+  }
+  var branch = Blockly.Sheets.statementToCode(block, 'DO');
+  branch = Blockly.Sheets.addLoopTrap(branch, block.id);
+  var code = '';
+  var loopVar = Blockly.Sheets.variableDB_.getDistinctName(
+      'count', Blockly.Variables.NAME_TYPE);
+  var endVar = repeats;
+  if (!repeats.match(/^\w+$/) && !Blockly.isNumber(repeats)) {
+    var endVar = Blockly.Sheets.variableDB_.getDistinctName(
+        'repeat_end', Blockly.Variables.NAME_TYPE);
+    code += 'var ' + endVar + ' = ' + repeats + ';\n';
+  }
+  code += 'for (var ' + loopVar + ' = 0; ' +
+      loopVar + ' < ' + endVar + '; ' +
+      loopVar + '++) {\n' +
+      branch + '}\n';
+  return code;
+};
+
+Blockly.Sheets['controls_repeat'] =
+    Blockly.Sheets['controls_repeat_ext'];
+
+Blockly.Sheets['controls_whileUntil'] = function(block) {
+  // Do while/until loop.
+  var until = block.getFieldValue('MODE') == 'UNTIL';
+  var argument0 = Blockly.Sheets.valueToCode(block, 'BOOL',
+      until ? Blockly.Sheets.ORDER_LOGICAL_NOT :
+      Blockly.Sheets.ORDER_NONE) || 'false';
+  var branch = Blockly.Sheets.statementToCode(block, 'DO');
+  branch = Blockly.Sheets.addLoopTrap(branch, block.id);
+  if (until) {
+    argument0 = '!' + argument0;
+  }
+  return 'while (' + argument0 + ') {\n' + branch + '}\n';
+};
+
+Blockly.Sheets['controls_for'] = function(block) {
+  // For loop.
+  var variable0 = Blockly.Sheets.variableDB_.getName(
+      block.getFieldValue('VAR'), Blockly.Variables.NAME_TYPE);
+  var argument0 = Blockly.Sheets.valueToCode(block, 'FROM',
+      Blockly.Sheets.ORDER_ASSIGNMENT) || '0';
+  var argument1 = Blockly.Sheets.valueToCode(block, 'TO',
+      Blockly.Sheets.ORDER_ASSIGNMENT) || '0';
+  var increment = Blockly.Sheets.valueToCode(block, 'BY',
+      Blockly.Sheets.ORDER_ASSIGNMENT) || '1';
+  var branch = Blockly.Sheets.statementToCode(block, 'DO');
+  branch = Blockly.Sheets.addLoopTrap(branch, block.id);
+  var code;
+  if (Blockly.isNumber(argument0) && Blockly.isNumber(argument1) &&
+      Blockly.isNumber(increment)) {
+    // All arguments are simple numbers.
+    var up = parseFloat(argument0) <= parseFloat(argument1);
+    code = 'for (' + variable0 + ' = ' + argument0 + '; ' +
+        variable0 + (up ? ' <= ' : ' >= ') + argument1 + '; ' +
+        variable0;
+    var step = Math.abs(parseFloat(increment));
+    if (step == 1) {
+      code += up ? '++' : '--';
+    } else {
+      code += (up ? ' += ' : ' -= ') + step;
+    }
+    code += ') {\n' + branch + '}\n';
+  } else {
+    code = '';
+    // Cache non-trivial values to variables to prevent repeated look-ups.
+    var startVar = argument0;
+    if (!argument0.match(/^\w+$/) && !Blockly.isNumber(argument0)) {
+      startVar = Blockly.Sheets.variableDB_.getDistinctName(
+          variable0 + '_start', Blockly.Variables.NAME_TYPE);
+      code += 'var ' + startVar + ' = ' + argument0 + ';\n';
+    }
+    var endVar = argument1;
+    if (!argument1.match(/^\w+$/) && !Blockly.isNumber(argument1)) {
+      var endVar = Blockly.Sheets.variableDB_.getDistinctName(
+          variable0 + '_end', Blockly.Variables.NAME_TYPE);
+      code += 'var ' + endVar + ' = ' + argument1 + ';\n';
+    }
+    // Determine loop direction at start, in case one of the bounds
+    // changes during loop execution.
+    var incVar = Blockly.Sheets.variableDB_.getDistinctName(
+        variable0 + '_inc', Blockly.Variables.NAME_TYPE);
+    code += 'var ' + incVar + ' = ';
+    if (Blockly.isNumber(increment)) {
+      code += Math.abs(increment) + ';\n';
+    } else {
+      code += 'Math.abs(' + increment + ');\n';
+    }
+    code += 'if (' + startVar + ' > ' + endVar + ') {\n';
+    code += Blockly.Sheets.INDENT + incVar + ' = -' + incVar + ';\n';
+    code += '}\n';
+    code += 'for (' + variable0 + ' = ' + startVar + '; ' +
+        incVar + ' >= 0 ? ' +
+        variable0 + ' <= ' + endVar + ' : ' +
+        variable0 + ' >= ' + endVar + '; ' +
+        variable0 + ' += ' + incVar + ') {\n' +
+        branch + '}\n';
+  }
+  return code;
+};
+
+Blockly.Sheets['controls_forEach'] = function(block) {
+  // For each loop.
+  var variable0 = Blockly.Sheets.variableDB_.getName(
+      block.getFieldValue('VAR'), Blockly.Variables.NAME_TYPE);
+  var argument0 = Blockly.Sheets.valueToCode(block, 'LIST',
+      Blockly.Sheets.ORDER_ASSIGNMENT) || '[]';
+  var branch = Blockly.Sheets.statementToCode(block, 'DO');
+  branch = Blockly.Sheets.addLoopTrap(branch, block.id);
+  var code = '';
+  // Cache non-trivial values to variables to prevent repeated look-ups.
+  var listVar = argument0;
+  if (!argument0.match(/^\w+$/)) {
+    listVar = Blockly.Sheets.variableDB_.getDistinctName(
+        variable0 + '_list', Blockly.Variables.NAME_TYPE);
+    code += 'var ' + listVar + ' = ' + argument0 + ';\n';
+  }
+  var indexVar = Blockly.Sheets.variableDB_.getDistinctName(
+      variable0 + '_index', Blockly.Variables.NAME_TYPE);
+  branch = Blockly.Sheets.INDENT + variable0 + ' = ' +
+      listVar + '[' + indexVar + '];\n' + branch;
+  code += 'for (var ' + indexVar + ' in ' + listVar + ') {\n' + branch + '}\n';
+  return code;
+};
+
+Blockly.Sheets['controls_flow_statements'] = function(block) {
+  // Flow statements: continue, break.
+  switch (block.getFieldValue('FLOW')) {
+    case 'BREAK':
+      return 'break;\n';
+    case 'CONTINUE':
+      return 'continue;\n';
+  }
+  throw 'Unknown flow statement.';
+};
+</script>
+<script>
+/**
+ * @license
+ * Visual Blocks Language
+ *
+ * Copyright 2012 Google Inc.
+ * https://developers.google.com/blockly/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @fileoverview Generating Sheets for math blocks.
+ * @author q.neutron@gmail.com (Quynh Neutron)
+ * @author zachdecook@gmail.com (Zach DeCook)
+ */
+'use strict';
+
+goog.provide('Blockly.Sheets.math');
+
+goog.require('Blockly.Sheets');
+
+
+Blockly.Sheets['math_number'] = function(block) {
+  // Numeric value.
+  var code = parseFloat(block.getFieldValue('NUM'));
+  return [code, Blockly.Sheets.ORDER_ATOMIC];
+};
+
+Blockly.Sheets['math_arithmetic'] = function(block) {
+  // Basic arithmetic operators, and power.
+  var OPERATORS = {
+    'ADD': [' + ', Blockly.Sheets.ORDER_ADDITION],
+    'MINUS': [' - ', Blockly.Sheets.ORDER_SUBTRACTION],
+    'MULTIPLY': [' * ', Blockly.Sheets.ORDER_MULTIPLICATION],
+    'DIVIDE': [' / ', Blockly.Sheets.ORDER_DIVISION],
+    'POWER': [null, Blockly.Sheets.ORDER_COMMA]  // Handle power separately.
+  };
+  var tuple = OPERATORS[block.getFieldValue('OP')];
+  var operator = tuple[0];
+  var order = tuple[1];
+  var argument0 = Blockly.Sheets.valueToCode(block, 'A', order) || '0';
+  var argument1 = Blockly.Sheets.valueToCode(block, 'B', order) || '0';
+  var code;
+  // Power in Sheets requires a special case since it has no operator.
+  if (!operator) {
+    code = 'Math.pow(' + argument0 + ', ' + argument1 + ')';
+    return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+  }
+  code = argument0 + operator + argument1;
+  return [code, order];
+};
+
+Blockly.Sheets['math_single'] = function(block) {
+  // Math operators with single operand.
+  var operator = block.getFieldValue('OP');
+  var code;
+  var arg;
+  if (operator == 'NEG') {
+    // Negation is a special case given its different operator precedence.
+    arg = Blockly.Sheets.valueToCode(block, 'NUM',
+        Blockly.Sheets.ORDER_UNARY_NEGATION) || '0';
+    if (arg[0] == '-') {
+      // --3 is not legal in JS.
+      arg = ' ' + arg;
+    }
+    code = '-' + arg;
+    return [code, Blockly.Sheets.ORDER_UNARY_NEGATION];
+  }
+  if (operator == 'SIN' || operator == 'COS' || operator == 'TAN') {
+    arg = Blockly.Sheets.valueToCode(block, 'NUM',
+        Blockly.Sheets.ORDER_DIVISION) || '0';
+  } else {
+    arg = Blockly.Sheets.valueToCode(block, 'NUM',
+        Blockly.Sheets.ORDER_NONE) || '0';
+  }
+  // First, handle cases which generate values that don't need parentheses
+  // wrapping the code.
+  switch (operator) {
+    case 'ABS':
+      code = 'Math.abs(' + arg + ')';
+      break;
+    case 'ROOT':
+      code = 'Math.sqrt(' + arg + ')';
+      break;
+    case 'LN':
+      code = 'Math.log(' + arg + ')';
+      break;
+    case 'EXP':
+      code = 'Math.exp(' + arg + ')';
+      break;
+    case 'POW10':
+      code = 'Math.pow(10,' + arg + ')';
+      break;
+    case 'ROUND':
+      code = 'Math.round(' + arg + ')';
+      break;
+    case 'ROUNDUP':
+      code = 'Math.ceil(' + arg + ')';
+      break;
+    case 'ROUNDDOWN':
+      code = 'Math.floor(' + arg + ')';
+      break;
+    case 'SIN':
+      code = 'Math.sin(' + arg + ' / 180 * Math.PI)';
+      break;
+    case 'COS':
+      code = 'Math.cos(' + arg + ' / 180 * Math.PI)';
+      break;
+    case 'TAN':
+      code = 'Math.tan(' + arg + ' / 180 * Math.PI)';
+      break;
+  }
+  if (code) {
+    return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+  }
+  // Second, handle cases which generate values that may need parentheses
+  // wrapping the code.
+  switch (operator) {
+    case 'LOG10':
+      code = 'Math.log(' + arg + ') / Math.log(10)';
+      break;
+    case 'ASIN':
+      code = 'Math.asin(' + arg + ') / Math.PI * 180';
+      break;
+    case 'ACOS':
+      code = 'Math.acos(' + arg + ') / Math.PI * 180';
+      break;
+    case 'ATAN':
+      code = 'Math.atan(' + arg + ') / Math.PI * 180';
+      break;
+    default:
+      throw 'Unknown math operator: ' + operator;
+  }
+  return [code, Blockly.Sheets.ORDER_DIVISION];
+};
+
+Blockly.Sheets['math_constant'] = function(block) {
+  // Constants: PI, E, the Golden Ratio, sqrt(2), 1/sqrt(2), INFINITY.
+  var CONSTANTS = {
+    'PI': ['Math.PI', Blockly.Sheets.ORDER_MEMBER],
+    'E': ['Math.E', Blockly.Sheets.ORDER_MEMBER],
+    'GOLDEN_RATIO':
+        ['(1 + Math.sqrt(5)) / 2', Blockly.Sheets.ORDER_DIVISION],
+    'SQRT2': ['Math.SQRT2', Blockly.Sheets.ORDER_MEMBER],
+    'SQRT1_2': ['Math.SQRT1_2', Blockly.Sheets.ORDER_MEMBER],
+    'INFINITY': ['Infinity', Blockly.Sheets.ORDER_ATOMIC]
+  };
+  return CONSTANTS[block.getFieldValue('CONSTANT')];
+};
+
+Blockly.Sheets['math_number_property'] = function(block) {
+  // Check if a number is even, odd, prime, whole, positive, or negative
+  // or if it is divisible by certain number. Returns true or false.
+  var number_to_check = Blockly.Sheets.valueToCode(block, 'NUMBER_TO_CHECK',
+      Blockly.Sheets.ORDER_MODULUS) || '0';
+  var dropdown_property = block.getFieldValue('PROPERTY');
+  var code;
+  if (dropdown_property == 'PRIME') {
+    // Prime is a special case as it is not a one-liner test.
+    var functionName = Blockly.Sheets.provideFunction_(
+        'mathIsPrime',
+        ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ + '(n) {',
+         '  // https://en.wikipedia.org/wiki/Primality_test#Naive_methods',
+         '  if (n == 2 || n == 3) {',
+         '    return true;',
+         '  }',
+         '  // False if n is NaN, negative, is 1, or not whole.',
+         '  // And false if n is divisible by 2 or 3.',
+         '  if (isNaN(n) || n <= 1 || n % 1 != 0 || n % 2 == 0 ||' +
+            ' n % 3 == 0) {',
+         '    return false;',
+         '  }',
+         '  // Check all the numbers of form 6k +/- 1, up to sqrt(n).',
+         '  for (var x = 6; x <= Math.sqrt(n) + 1; x += 6) {',
+         '    if (n % (x - 1) == 0 || n % (x + 1) == 0) {',
+         '      return false;',
+         '    }',
+         '  }',
+         '  return true;',
+         '}']);
+    code = functionName + '(' + number_to_check + ')';
+    return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+  }
+  switch (dropdown_property) {
+    case 'EVEN':
+      code = number_to_check + ' % 2 == 0';
+      break;
+    case 'ODD':
+      code = number_to_check + ' % 2 == 1';
+      break;
+    case 'WHOLE':
+      code = number_to_check + ' % 1 == 0';
+      break;
+    case 'POSITIVE':
+      code = number_to_check + ' > 0';
+      break;
+    case 'NEGATIVE':
+      code = number_to_check + ' < 0';
+      break;
+    case 'DIVISIBLE_BY':
+      var divisor = Blockly.Sheets.valueToCode(block, 'DIVISOR',
+          Blockly.Sheets.ORDER_MODULUS) || '0';
+      code = number_to_check + ' % ' + divisor + ' == 0';
+      break;
+  }
+  return [code, Blockly.Sheets.ORDER_EQUALITY];
+};
+
+Blockly.Sheets['math_change'] = function(block) {
+  // Add to a variable in place.
+  var argument0 = Blockly.Sheets.valueToCode(block, 'DELTA',
+      Blockly.Sheets.ORDER_ADDITION) || '0';
+  var varName = Blockly.Sheets.variableDB_.getName(
+      block.getFieldValue('VAR'), Blockly.Variables.NAME_TYPE);
+  return varName + ' = (typeof ' + varName + ' == \'number\' ? ' + varName +
+      ' : 0) + ' + argument0 + ';\n';
+};
+
+// Rounding functions have a single operand.
+Blockly.Sheets['math_round'] = Blockly.Sheets['math_single'];
+// Trigonometry functions have a single operand.
+Blockly.Sheets['math_trig'] = Blockly.Sheets['math_single'];
+
+Blockly.Sheets['math_on_list'] = function(block) {
+  // Math functions for lists.
+  var func = block.getFieldValue('OP');
+  var list, code;
+  switch (func) {
+    case 'SUM':
+      list = Blockly.Sheets.valueToCode(block, 'LIST',
+          Blockly.Sheets.ORDER_MEMBER) || '[]';
+      code = list + '.reduce(function(x, y) {return x + y;})';
+      break;
+    case 'MIN':
+      list = Blockly.Sheets.valueToCode(block, 'LIST',
+          Blockly.Sheets.ORDER_COMMA) || '[]';
+      code = 'Math.min.apply(null, ' + list + ')';
+      break;
+    case 'MAX':
+      list = Blockly.Sheets.valueToCode(block, 'LIST',
+          Blockly.Sheets.ORDER_COMMA) || '[]';
+      code = 'Math.max.apply(null, ' + list + ')';
+      break;
+    case 'AVERAGE':
+      // mathMean([null,null,1,3]) == 2.0.
+      var functionName = Blockly.Sheets.provideFunction_(
+          'mathMean',
+          ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+              '(myList) {',
+            '  return myList.reduce(function(x, y) {return x + y;}) / ' +
+                  'myList.length;',
+            '}']);
+      list = Blockly.Sheets.valueToCode(block, 'LIST',
+          Blockly.Sheets.ORDER_NONE) || '[]';
+      code = functionName + '(' + list + ')';
+      break;
+    case 'MEDIAN':
+      // mathMedian([null,null,1,3]) == 2.0.
+      var functionName = Blockly.Sheets.provideFunction_(
+          'mathMedian',
+          ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+              '(myList) {',
+            '  var localList = myList.filter(function (x) ' +
+              '{return typeof x == \'number\';});',
+            '  if (!localList.length) return null;',
+            '  localList.sort(function(a, b) {return b - a;});',
+            '  if (localList.length % 2 == 0) {',
+            '    return (localList[localList.length / 2 - 1] + ' +
+              'localList[localList.length / 2]) / 2;',
+            '  } else {',
+            '    return localList[(localList.length - 1) / 2];',
+            '  }',
+            '}']);
+      list = Blockly.Sheets.valueToCode(block, 'LIST',
+          Blockly.Sheets.ORDER_NONE) || '[]';
+      code = functionName + '(' + list + ')';
+      break;
+    case 'MODE':
+      // As a list of numbers can contain more than one mode,
+      // the returned result is provided as an array.
+      // Mode of [3, 'x', 'x', 1, 1, 2, '3'] -> ['x', 1].
+      var functionName = Blockly.Sheets.provideFunction_(
+          'mathModes',
+          ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+              '(values) {',
+            '  var modes = [];',
+            '  var counts = [];',
+            '  var maxCount = 0;',
+            '  for (var i = 0; i < values.length; i++) {',
+            '    var value = values[i];',
+            '    var found = false;',
+            '    var thisCount;',
+            '    for (var j = 0; j < counts.length; j++) {',
+            '      if (counts[j][0] === value) {',
+            '        thisCount = ++counts[j][1];',
+            '        found = true;',
+            '        break;',
+            '      }',
+            '    }',
+            '    if (!found) {',
+            '      counts.push([value, 1]);',
+            '      thisCount = 1;',
+            '    }',
+            '    maxCount = Math.max(thisCount, maxCount);',
+            '  }',
+            '  for (var j = 0; j < counts.length; j++) {',
+            '    if (counts[j][1] == maxCount) {',
+            '        modes.push(counts[j][0]);',
+            '    }',
+            '  }',
+            '  return modes;',
+            '}']);
+      list = Blockly.Sheets.valueToCode(block, 'LIST',
+          Blockly.Sheets.ORDER_NONE) || '[]';
+      code = functionName + '(' + list + ')';
+      break;
+    case 'STD_DEV':
+      var functionName = Blockly.Sheets.provideFunction_(
+          'mathStandardDeviation',
+          ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+              '(numbers) {',
+            '  var n = numbers.length;',
+            '  if (!n) return null;',
+            '  var mean = numbers.reduce(function(x, y) {return x + y;}) / n;',
+            '  var variance = 0;',
+            '  for (var j = 0; j < n; j++) {',
+            '    variance += Math.pow(numbers[j] - mean, 2);',
+            '  }',
+            '  variance = variance / n;',
+            '  return Math.sqrt(variance);',
+            '}']);
+      list = Blockly.Sheets.valueToCode(block, 'LIST',
+          Blockly.Sheets.ORDER_NONE) || '[]';
+      code = functionName + '(' + list + ')';
+      break;
+    case 'RANDOM':
+      var functionName = Blockly.Sheets.provideFunction_(
+          'mathRandomList',
+          ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+              '(list) {',
+            '  var x = Math.floor(Math.random() * list.length);',
+            '  return list[x];',
+            '}']);
+      list = Blockly.Sheets.valueToCode(block, 'LIST',
+          Blockly.Sheets.ORDER_NONE) || '[]';
+      code = functionName + '(' + list + ')';
+      break;
+    default:
+      throw 'Unknown operator: ' + func;
+  }
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['math_modulo'] = function(block) {
+  // Remainder computation.
+  var argument0 = Blockly.Sheets.valueToCode(block, 'DIVIDEND',
+      Blockly.Sheets.ORDER_MODULUS) || '0';
+  var argument1 = Blockly.Sheets.valueToCode(block, 'DIVISOR',
+      Blockly.Sheets.ORDER_MODULUS) || '0';
+  var code = argument0 + ' % ' + argument1;
+  return [code, Blockly.Sheets.ORDER_MODULUS];
+};
+
+Blockly.Sheets['math_constrain'] = function(block) {
+  // Constrain a number between two limits.
+  var argument0 = Blockly.Sheets.valueToCode(block, 'VALUE',
+      Blockly.Sheets.ORDER_COMMA) || '0';
+  var argument1 = Blockly.Sheets.valueToCode(block, 'LOW',
+      Blockly.Sheets.ORDER_COMMA) || '0';
+  var argument2 = Blockly.Sheets.valueToCode(block, 'HIGH',
+      Blockly.Sheets.ORDER_COMMA) || 'Infinity';
+  var code = 'Math.min(Math.max(' + argument0 + ', ' + argument1 + '), ' +
+      argument2 + ')';
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['math_random_int'] = function(block) {
+  // Random integer between [X] and [Y].
+  var argument0 = Blockly.Sheets.valueToCode(block, 'FROM',
+      Blockly.Sheets.ORDER_COMMA) || '0';
+  var argument1 = Blockly.Sheets.valueToCode(block, 'TO',
+      Blockly.Sheets.ORDER_COMMA) || '0';
+  var functionName = Blockly.Sheets.provideFunction_(
+      'mathRandomInt',
+      ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+          '(a, b) {',
+       '  if (a > b) {',
+       '    // Swap a and b to ensure a is smaller.',
+       '    var c = a;',
+       '    a = b;',
+       '    b = c;',
+       '  }',
+       '  return Math.floor(Math.random() * (b - a + 1) + a);',
+       '}']);
+  var code = functionName + '(' + argument0 + ', ' + argument1 + ')';
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['math_random_float'] = function(block) {
+  // Random fraction between 0 and 1.
+  return ['Math.random()', Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+</script>
+<script>
+/**
+ * @license
+ * Visual Blocks Language
+ *
+ * Copyright 2012 Google Inc.
+ * https://developers.google.com/blockly/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @fileoverview Generating Sheets for procedure blocks.
+ * @author fraser@google.com (Neil Fraser)
+ * @author zachdecook@gmail.com (Zach DeCook)
+ */
+'use strict';
+
+goog.provide('Blockly.Sheets.procedures');
+
+goog.require('Blockly.Sheets');
+
+
+Blockly.Sheets['procedures_defreturn'] = function(block) {
+  // Define a procedure with a return value.
+  var funcName = Blockly.Sheets.variableDB_.getName(
+      block.getFieldValue('NAME'), Blockly.Procedures.NAME_TYPE);
+  var branch = Blockly.Sheets.statementToCode(block, 'STACK');
+  if (Blockly.Sheets.STATEMENT_PREFIX) {
+    branch = Blockly.Sheets.prefixLines(
+        Blockly.Sheets.STATEMENT_PREFIX.replace(/%1/g,
+        '\'' + block.id + '\''), Blockly.Sheets.INDENT) + branch;
+  }
+  if (Blockly.Sheets.INFINITE_LOOP_TRAP) {
+    branch = Blockly.Sheets.INFINITE_LOOP_TRAP.replace(/%1/g,
+        '\'' + block.id + '\'') + branch;
+  }
+  var returnValue = Blockly.Sheets.valueToCode(block, 'RETURN',
+      Blockly.Sheets.ORDER_NONE) || '';
+  if (returnValue) {
+    returnValue = '  return ' + returnValue + ';\n';
+  }
+  var args = [];
+  for (var i = 0; i < block.arguments_.length; i++) {
+    args[i] = Blockly.Sheets.variableDB_.getName(block.arguments_[i],
+        Blockly.Variables.NAME_TYPE);
+  }
+  var code = 'function ' + funcName + '(' + args.join(', ') + ') {\n' +
+      branch + returnValue + '}';
+  code = Blockly.Sheets.scrub_(block, code);
+  // Add % so as not to collide with helper functions in definitions list.
+  Blockly.Sheets.definitions_['%' + funcName] = code;
+  return null;
+};
+
+// Defining a procedure without a return value uses the same generator as
+// a procedure with a return value.
+Blockly.Sheets['procedures_defnoreturn'] =
+    Blockly.Sheets['procedures_defreturn'];
+
+Blockly.Sheets['procedures_callreturn'] = function(block) {
+  // Call a procedure with a return value.
+  var funcName = Blockly.Sheets.variableDB_.getName(
+      block.getFieldValue('NAME'), Blockly.Procedures.NAME_TYPE);
+  var args = [];
+  for (var i = 0; i < block.arguments_.length; i++) {
+    args[i] = Blockly.Sheets.valueToCode(block, 'ARG' + i,
+        Blockly.Sheets.ORDER_COMMA) || 'null';
+  }
+  var code = funcName + '(' + args.join(', ') + ')';
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['procedures_callnoreturn'] = function(block) {
+  // Call a procedure with no return value.
+  var funcName = Blockly.Sheets.variableDB_.getName(
+      block.getFieldValue('NAME'), Blockly.Procedures.NAME_TYPE);
+  var args = [];
+  for (var i = 0; i < block.arguments_.length; i++) {
+    args[i] = Blockly.Sheets.valueToCode(block, 'ARG' + i,
+        Blockly.Sheets.ORDER_COMMA) || 'null';
+  }
+  var code = funcName + '(' + args.join(', ') + ');\n';
+  return code;
+};
+
+Blockly.Sheets['procedures_ifreturn'] = function(block) {
+  // Conditionally return value from a procedure.
+  var condition = Blockly.Sheets.valueToCode(block, 'CONDITION',
+      Blockly.Sheets.ORDER_NONE) || 'false';
+  var code = 'if (' + condition + ') {\n';
+  if (block.hasReturnValue_) {
+    var value = Blockly.Sheets.valueToCode(block, 'VALUE',
+        Blockly.Sheets.ORDER_NONE) || 'null';
+    code += '  return ' + value + ';\n';
+  } else {
+    code += '  return;\n';
+  }
+  code += '}\n';
+  return code;
+};
+</script>
+<script>
+/**
+ * @license
+ * Visual Blocks Language
+ *
+ * Copyright 2012 Google Inc.
+ * https://developers.google.com/blockly/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @fileoverview Generating Sheets for text blocks.
+ * @author fraser@google.com (Neil Fraser)
+ * @author zachdecook@gmail.com (Zach DeCook)
+ */
+'use strict';
+
+goog.provide('Blockly.Sheets.texts');
+
+goog.require('Blockly.Sheets');
+
+
+Blockly.Sheets['text'] = function(block) {
+  // Text value.
+  var code = Blockly.Sheets.quote_(block.getFieldValue('TEXT'));
+  return [code, Blockly.Sheets.ORDER_ATOMIC];
+};
+
+Blockly.Sheets['text_join'] = function(block) {
+  // Create a string made up of any number of elements of any type.
+  switch (block.itemCount_) {
+    case 0:
+      return ['\'\'', Blockly.Sheets.ORDER_ATOMIC];
+    case 1:
+      var element = Blockly.Sheets.valueToCode(block, 'ADD0',
+          Blockly.Sheets.ORDER_NONE) || '\'\'';
+      var code = 'String(' + element + ')';
+      return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+    case 2:
+      var element0 = Blockly.Sheets.valueToCode(block, 'ADD0',
+          Blockly.Sheets.ORDER_NONE) || '\'\'';
+      var element1 = Blockly.Sheets.valueToCode(block, 'ADD1',
+          Blockly.Sheets.ORDER_NONE) || '\'\'';
+      var code = 'String(' + element0 + ') + String(' + element1 + ')';
+      return [code, Blockly.Sheets.ORDER_ADDITION];
+    default:
+      var elements = new Array(block.itemCount_);
+      for (var i = 0; i < block.itemCount_; i++) {
+        elements[i] = Blockly.Sheets.valueToCode(block, 'ADD' + i,
+            Blockly.Sheets.ORDER_COMMA) || '\'\'';
+      }
+      var code = '[' + elements.join(',') + '].join(\'\')';
+      return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+  }
+};
+
+Blockly.Sheets['text_append'] = function(block) {
+  // Append to a variable in place.
+  var varName = Blockly.Sheets.variableDB_.getName(
+      block.getFieldValue('VAR'), Blockly.Variables.NAME_TYPE);
+  var value = Blockly.Sheets.valueToCode(block, 'TEXT',
+      Blockly.Sheets.ORDER_NONE) || '\'\'';
+  return varName + ' = String(' + varName + ') + String(' + value + ');\n';
+};
+
+Blockly.Sheets['text_length'] = function(block) {
+  // String or array length.
+  var text = Blockly.Sheets.valueToCode(block, 'VALUE',
+      Blockly.Sheets.ORDER_FUNCTION_CALL) || '\'\'';
+  return [text + '.length', Blockly.Sheets.ORDER_MEMBER];
+};
+
+Blockly.Sheets['text_isEmpty'] = function(block) {
+  // Is the string null or array empty?
+  var text = Blockly.Sheets.valueToCode(block, 'VALUE',
+      Blockly.Sheets.ORDER_MEMBER) || '\'\'';
+  return ['!' + text + '.length', Blockly.Sheets.ORDER_LOGICAL_NOT];
+};
+
+Blockly.Sheets['text_indexOf'] = function(block) {
+  // Search the text for a substring.
+  var operator = block.getFieldValue('END') == 'FIRST' ?
+      'indexOf' : 'lastIndexOf';
+  var substring = Blockly.Sheets.valueToCode(block, 'FIND',
+      Blockly.Sheets.ORDER_NONE) || '\'\'';
+  var text = Blockly.Sheets.valueToCode(block, 'VALUE',
+      Blockly.Sheets.ORDER_MEMBER) || '\'\'';
+  var code = text + '.' + operator + '(' + substring + ')';
+  // Adjust index if using one-based indices.
+  if (block.workspace.options.oneBasedIndex) {
+    return [code + ' + 1', Blockly.Sheets.ORDER_ADDITION];
+  }
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['text_charAt'] = function(block) {
+  // Get letter at index.
+  // Note: Until January 2013 this block did not have the WHERE input.
+  var where = block.getFieldValue('WHERE') || 'FROM_START';
+  var textOrder = (where == 'RANDOM') ? Blockly.Sheets.ORDER_NONE :
+      Blockly.Sheets.ORDER_MEMBER;
+  var text = Blockly.Sheets.valueToCode(block, 'VALUE',
+      textOrder) || '\'\'';
+  switch (where) {
+    case 'FIRST':
+      var code = text + '.charAt(0)';
+      return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+    case 'LAST':
+      var code = text + '.slice(-1)';
+      return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+    case 'FROM_START':
+      var at = Blockly.Sheets.getAdjusted(block, 'AT');
+      // Adjust index if using one-based indices.
+      var code = text + '.charAt(' + at + ')';
+      return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+    case 'FROM_END':
+      var at = Blockly.Sheets.getAdjusted(block, 'AT', 1, true);
+      var code = text + '.slice(' + at + ').charAt(0)';
+      return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+    case 'RANDOM':
+      var functionName = Blockly.Sheets.provideFunction_(
+          'textRandomLetter',
+          ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+              '(text) {',
+           '  var x = Math.floor(Math.random() * text.length);',
+           '  return text[x];',
+           '}']);
+      var code = functionName + '(' + text + ')';
+      return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+  }
+  throw 'Unhandled option (text_charAt).';
+};
+
+/**
+ * Returns an expression calculating the index into a string.
+ * @private
+ * @param {string} stringName Name of the string, used to calculate length.
+ * @param {string} where The method of indexing, selected by dropdown in Blockly
+ * @param {string=} opt_at The optional offset when indexing from start/end.
+ * @return {string} Index expression.
+ */
+Blockly.Sheets.text.getIndex_ = function(stringName, where, opt_at) {
+  if (where == 'FIRST') {
+    return '0';
+  } else if (where == 'FROM_END') {
+    return stringName + '.length - 1 - ' + opt_at;
+  } else if (where == 'LAST') {
+    return stringName + '.length - 1';
+  } else {
+    return opt_at;
+  }
+};
+
+Blockly.Sheets['text_getSubstring'] = function(block) {
+  // Get substring.
+  var text = Blockly.Sheets.valueToCode(block, 'STRING',
+      Blockly.Sheets.ORDER_FUNCTION_CALL) || '\'\'';
+  var where1 = block.getFieldValue('WHERE1');
+  var where2 = block.getFieldValue('WHERE2');
+  if (where1 == 'FIRST' && where2 == 'LAST') {
+    var code = text;
+  } else if (text.match(/^'?\w+'?$/) ||
+      (where1 != 'FROM_END' && where1 != 'LAST' &&
+      where2 != 'FROM_END' && where2 != 'LAST')) {
+    // If the text is a variable or literal or doesn't require a call for
+    // length, don't generate a helper function.
+    switch (where1) {
+      case 'FROM_START':
+        var at1 = Blockly.Sheets.getAdjusted(block, 'AT1');
+        break;
+      case 'FROM_END':
+        var at1 = Blockly.Sheets.getAdjusted(block, 'AT1', 1, false,
+            Blockly.Sheets.ORDER_SUBTRACTION);
+        at1 = text + '.length - ' + at1;
+        break;
+      case 'FIRST':
+        var at1 = '0';
+        break;
+      default:
+        throw 'Unhandled option (text_getSubstring).';
+    }
+    switch (where2) {
+      case 'FROM_START':
+        var at2 = Blockly.Sheets.getAdjusted(block, 'AT2', 1);
+        break;
+      case 'FROM_END':
+        var at2 = Blockly.Sheets.getAdjusted(block, 'AT2', 0, false,
+            Blockly.Sheets.ORDER_SUBTRACTION);
+        at2 = text + '.length - ' + at2;
+        break;
+      case 'LAST':
+        var at2 = text + '.length';
+        break;
+      default:
+        throw 'Unhandled option (text_getSubstring).';
+    }
+    code = text + '.slice(' + at1 + ', ' + at2 + ')';
+  } else {
+    var at1 = Blockly.Sheets.getAdjusted(block, 'AT1');
+    var at2 = Blockly.Sheets.getAdjusted(block, 'AT2');
+    var getIndex_ = Blockly.Sheets.text.getIndex_;
+    var wherePascalCase = {'FIRST': 'First', 'LAST': 'Last',
+      'FROM_START': 'FromStart', 'FROM_END': 'FromEnd'};
+    var functionName = Blockly.Sheets.provideFunction_(
+        'subsequence' + wherePascalCase[where1] + wherePascalCase[where2],
+        ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+        '(sequence' +
+        // The value for 'FROM_END' and'FROM_START' depends on `at` so
+        // we add it as a parameter.
+        ((where1 == 'FROM_END' || where1 == 'FROM_START') ? ', at1' : '') +
+        ((where2 == 'FROM_END' || where2 == 'FROM_START') ? ', at2' : '') +
+        ') {',
+          '  var start = ' + getIndex_('sequence', where1, 'at1') + ';',
+          '  var end = ' + getIndex_('sequence', where2, 'at2') + ' + 1;',
+          '  return sequence.slice(start, end);',
+          '}']);
+    var code = functionName + '(' + text +
+        // The value for 'FROM_END' and 'FROM_START' depends on `at` so we
+        // pass it.
+        ((where1 == 'FROM_END' || where1 == 'FROM_START') ? ', ' + at1 : '') +
+        ((where2 == 'FROM_END' || where2 == 'FROM_START') ? ', ' + at2 : '') +
+        ')';
+  }
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['text_changeCase'] = function(block) {
+  // Change capitalization.
+  var OPERATORS = {
+    'UPPERCASE': '.toUpperCase()',
+    'LOWERCASE': '.toLowerCase()',
+    'TITLECASE': null
+  };
+  var operator = OPERATORS[block.getFieldValue('CASE')];
+  var textOrder = operator ? Blockly.Sheets.ORDER_MEMBER :
+      Blockly.Sheets.ORDER_NONE;
+  var text = Blockly.Sheets.valueToCode(block, 'TEXT',
+      textOrder) || '\'\'';
+  if (operator) {
+    // Upper and lower case are functions built into Sheets.
+    var code = text + operator;
+  } else {
+    // Title case is not a native Sheets function.  Define one.
+    var functionName = Blockly.Sheets.provideFunction_(
+        'textToTitleCase',
+        ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+            '(str) {',
+         '  return str.replace(/\\S+/g,',
+         '      function(txt) {return txt[0].toUpperCase() + ' +
+            'txt.substring(1).toLowerCase();});',
+         '}']);
+    var code = functionName + '(' + text + ')';
+  }
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['text_trim'] = function(block) {
+  // Trim spaces.
+  var OPERATORS = {
+    'LEFT': ".replace(/^[\\s\\xa0]+/, '')",
+    'RIGHT': ".replace(/[\\s\\xa0]+$/, '')",
+    'BOTH': '.trim()'
+  };
+  var operator = OPERATORS[block.getFieldValue('MODE')];
+  var text = Blockly.Sheets.valueToCode(block, 'TEXT',
+      Blockly.Sheets.ORDER_MEMBER) || '\'\'';
+  return [text + operator, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['text_print'] = function(block) {
+  // Print statement.
+  var msg = Blockly.Sheets.valueToCode(block, 'TEXT',
+      Blockly.Sheets.ORDER_NONE) || '\'\'';
+  return 'window.alert(' + msg + ');\n';
+};
+
+Blockly.Sheets['text_prompt_ext'] = function(block) {
+  // Prompt function.
+  if (block.getField('TEXT')) {
+    // Internal message.
+    var msg = Blockly.Sheets.quote_(block.getFieldValue('TEXT'));
+  } else {
+    // External message.
+    var msg = Blockly.Sheets.valueToCode(block, 'TEXT',
+        Blockly.Sheets.ORDER_NONE) || '\'\'';
+  }
+  var code = 'window.prompt(' + msg + ')';
+  var toNumber = block.getFieldValue('TYPE') == 'NUMBER';
+  if (toNumber) {
+    code = 'parseFloat(' + code + ')';
+  }
+  return [code, Blockly.Sheets.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Sheets['text_prompt'] = Blockly.Sheets['text_prompt_ext'];
+
+Blockly.Sheets['text_count'] = function(block) {
+  var text = Blockly.Sheets.valueToCode(block, 'TEXT',
+      Blockly.Sheets.ORDER_MEMBER) || '\'\'';
+  var sub = Blockly.Sheets.valueToCode(block, 'SUB',
+      Blockly.Sheets.ORDER_NONE) || '\'\'';
+  var functionName = Blockly.Sheets.provideFunction_(
+      'textCount',
+      ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+          '(haystack, needle) {',
+       '  if (needle.length === 0) {',
+       '    return haystack.length + 1;',
+       '  } else {',
+       '    return haystack.split(needle).length - 1;',
+       '  }',
+       '}']);
+  var code = functionName + '(' + text + ', ' + sub + ')';
+  return [code, Blockly.Sheets.ORDER_SUBTRACTION];
+};
+
+Blockly.Sheets['text_replace'] = function(block) {
+  var text = Blockly.Sheets.valueToCode(block, 'TEXT',
+      Blockly.Sheets.ORDER_MEMBER) || '\'\'';
+  var from = Blockly.Sheets.valueToCode(block, 'FROM',
+      Blockly.Sheets.ORDER_NONE) || '\'\'';
+  var to = Blockly.Sheets.valueToCode(block, 'TO',
+      Blockly.Sheets.ORDER_NONE) || '\'\'';
+  // The regex escaping code below is taken from the implementation of
+  // goog.string.regExpEscape.
+  var functionName = Blockly.Sheets.provideFunction_(
+      'textReplace',
+      ['function ' + Blockly.Sheets.FUNCTION_NAME_PLACEHOLDER_ +
+          '(haystack, needle, replacement) {',
+       '  needle = ' +
+           'needle.replace(/([-()\\[\\]{}+?*.$\\^|,:#<!\\\\])/g,"\\\\$1")',
+       '                 .replace(/\\x08/g,"\\\\x08");',
+       '  return haystack.replace(new RegExp(needle, \'g\'), replacement);',
+       '}']);
+  var code = functionName + '(' + text + ', ' + from + ', ' + to + ')';
+  return [code, Blockly.Sheets.ORDER_MEMBER];
+};
+
+Blockly.Sheets['text_reverse'] = function(block) {
+  var text = Blockly.Sheets.valueToCode(block, 'TEXT',
+      Blockly.Sheets.ORDER_MEMBER) || '\'\'';
+  var code = text + '.split(\'\').reverse().join(\'\')';
+  return [code, Blockly.Sheets.ORDER_MEMBER];
+};
+</script>
+<script>
+/**
+ * @license
+ * Visual Blocks Language
+ *
+ * Copyright 2012 Google Inc.
+ * https://developers.google.com/blockly/
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @fileoverview Generating Sheets for variable blocks.
+ * @author fraser@google.com (Neil Fraser)
+ * @author zachdecook@gmail.com (Zach DeCook)
+ */
+'use strict';
+
+goog.provide('Blockly.Sheets.variables');
+
+goog.require('Blockly.Sheets');
+
+
+Blockly.Sheets['variables_get'] = function(block) {
+  // Variable getter.
+  var code = Blockly.Sheets.variableDB_.getName(block.getFieldValue('VAR'),
+      Blockly.Variables.NAME_TYPE);
+  return [code, Blockly.Sheets.ORDER_ATOMIC];
+};
+
+Blockly.Sheets['variables_set'] = function(block) {
+  // Variable setter.
+  var argument0 = Blockly.Sheets.valueToCode(block, 'VALUE',
+      Blockly.Sheets.ORDER_ASSIGNMENT) || '0';
+  var varName = Blockly.Sheets.variableDB_.getName(
+      block.getFieldValue('VAR'), Blockly.Variables.NAME_TYPE);
+  return varName + ' = ' + argument0 + ';\n';
+};
+</script>
     <base target="_top">
     <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
     <!-- The CSS package above applies Google styling to buttons and other elements. -->
@@ -2383,9 +4467,6 @@ Blockly.Msg["COLOUR_HUE"] = "20";</script>
   <div class="sidebar branding-below">
 
 <p>Build your formulas one block by block!</p>
-<p>
-  <button onclick="showCode()">Show Google Sheets formulae</button>
-</p>
 
 <div id="blocklyDiv" style="height: 480px; width: 100%;"></div>
 
@@ -2479,9 +4560,13 @@ Blockly.Msg["COLOUR_HUE"] = "20";</script>
 	// Generate JavaScript code and display it.
 	Blockly.Sheets.INFINITE_LOOP_TRAP = null;
 	var code = Blockly.Sheets.workspaceToCode(workspace);
-	alert(code);
+	document.getElementById("generated-formulas").value = code;
   }
 </script>
+
+<p>
+  <button onclick="showCode()">Show Google Sheets formulae</button>
+</p>
 
 <!-- old stuff-->  
 
@@ -2490,8 +4575,8 @@ Blockly.Msg["COLOUR_HUE"] = "20";</script>
 	  </div>
 
 	  <div class="block form-group">
-		<label for="translated-text"><b>Output</b></label>
-		<textarea class="width-100" id="translated-text" rows="4"></textarea>
+		<label for="generated-formulas"><b>Output</b></label>
+		<textarea class="width-100" id="generated-formulas" rows="4" disabled></textarea>
 	  </div>
 
 	 <div class="block" id="button-bar">
@@ -2548,7 +4633,7 @@ Blockly.Msg["COLOUR_HUE"] = "20";</script>
 	  google.script.run
 		  .withSuccessHandler(
 			function(textAndTranslation, element) {
-			  $('#translated-text').val(textAndTranslation.translation);
+			  $('#generated-formulas').val(textAndTranslation.translation);
 			  element.disabled = false;
 			})
 		  .withFailureHandler(
@@ -2578,7 +4663,7 @@ Blockly.Msg["COLOUR_HUE"] = "20";</script>
 			  element.disabled = false;
 			})
 		  .withUserObject(this)
-		  .insertText($('#translated-text').val());
+		  .insertText($('#generated-formulas').val());
 	}
 
 	/**

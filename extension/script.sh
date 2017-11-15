@@ -12,4 +12,16 @@ echo "<script>" >> Sidebar.html
 cat ../msg/js/en.js >> Sidebar.html
 echo "</script>" >> Sidebar.html
 
+# Generate the formulas client side
+echo "<script>" >> Sidebar.html
+cat ../generators/sheets.js >> Sidebar.html
+echo "</script>" >> Sidebar.html
+
+for value in sheetsblocks.js colour.js lists.js logic.js loops.js math.js procedures.js text.js variables.js
+do
+echo "<script>" >> Sidebar.html
+cat "../generators/sheets/$value" >> Sidebar.html
+echo "</script>" >> Sidebar.html
+done
+
 cat Sidebarbodyend.html >> Sidebar.html
