@@ -130,19 +130,19 @@
   Blockly.Xml.domToWorkspace(document.getElementById('startBlocks'),
 							 workspace);
 
-  function showCode() {
-	// Generate JavaScript code and display it.
+/**
+ * @brief Update the text box with the regenerated formulas every time something has changed.
+ */
+function myUpdateFunction()
+{
 	Blockly.Sheets.INFINITE_LOOP_TRAP = null;
 	var code = Blockly.Sheets.workspaceToCode(workspace);
 	document.getElementById("generated-formulas").value = code;
-  }
+}
+workspace.addChangeListener(myUpdateFunction);
 </script>
 
-<p>
-  <button onclick="showCode()">Show Google Sheets formulae</button>
-</p>
-
-<!-- old stuff-->  
+<!-- old stuff-->
 
 	<form>
 	  <div class="block col-contain">
@@ -153,10 +153,9 @@
 		<textarea class="width-100" id="generated-formulas" rows="4" disabled></textarea>
 	  </div>
 
-	 <div class="block" id="button-bar">
-		<button class="blue" id="run-translation">Generate</button>
-		<button id="insert-text">Insert</button>
-	  </div>
+	<div class="block" id="button-bar">
+		<button class="blue" id="insert-text">Insert</button>
+	</div>
 	</form>
   </div>
 
@@ -173,55 +172,11 @@
 	 * user's origin and destination language preferences if previously set.
 	 */
 	$(function() {
-	  $('#run-translation').click(runTranslation);
 	  $('#insert-text').click(insertText);
-	  google.script.run.withSuccessHandler(loadPreferences)
-		  .withFailureHandler(showError).getPreferences();
 	});
 
 	/**
-	 * Callback function that populates the origin and destination selection
-	 * boxes with user preferences from the server.
-	 *
-	 * @param {Object} languagePrefs The saved origin and destination languages.
-	 */
-	function loadPreferences(languagePrefs) {
-	  $('input:radio[name="origin"]')
-		  .filter('[value=' + languagePrefs.originLang + ']')
-		  .attr('checked', true);
-	  $('input:radio[name="dest"]')
-		  .filter('[value=' + languagePrefs.destLang + ']')
-		  .attr('checked', true);
-	}
-
-	/**
-	 * Runs a server-side function to translate the user-selected text and update
-	 * the sidebar UI with the resulting translation.
-	 */
-	function runTranslation() {
-	  this.disabled = true;
-	  $('#error').remove();
-	  var origin = $('input[name=origin]:checked').val();
-	  var dest = $('input[name=dest]:checked').val();
-	  var savePrefs = $('#save-prefs').is(':checked');
-	  google.script.run
-		  .withSuccessHandler(
-			function(textAndTranslation, element) {
-			  $('#generated-formulas').val(textAndTranslation.translation);
-			  element.disabled = false;
-			})
-		  .withFailureHandler(
-			function(msg, element) {
-			  showError(msg, $('#button-bar'));
-			  element.disabled = false;
-			})
-		  .withUserObject(this)
-		  .getTextAndTranslation(origin, dest, savePrefs);
-	}
-
-	/**
-	 * Runs a server-side function to insert the translated text into the document
-	 * at the user's cursor or selection.
+	 * Runs a server-side function to insert the formulas...
 	 */
 	function insertText() {
 	  this.disabled = true;

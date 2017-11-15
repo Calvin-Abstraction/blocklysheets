@@ -91,54 +91,6 @@ function getSelectedText() {
 }
 
 /**
- * Gets the stored user preferences for the origin and destination languages,
- * if they exist.
- * This method is only used by the regular add-on, and is never called by
- * the mobile add-on version.
- *
- * @return {Object} The user's origin and destination language preferences, if
- *     they exist.
- */
-function getPreferences() {
-  var userProperties = PropertiesService.getUserProperties();
-  var languagePrefs = {
-    originLang: userProperties.getProperty('originLang'),
-    destLang: userProperties.getProperty('destLang')
-  };
-  return languagePrefs;
-}
-
-/**
- * Gets the user-selected text and translates it from the origin language to the
- * destination language. The languages are notated by their two-letter short
- * form. For example, English is 'en', and Spanish is 'es'. The origin language
- * may be specified as an empty string to indicate that Google Translate should
- * auto-detect the language.
- *
- * @param {string} origin The two-letter short form for the origin language.
- * @param {string} dest The two-letter short form for the destination language.
- * @param {boolean} savePrefs Whether to save the origin and destination
- *     language preferences.
- * @return {Object} Object containing the original text and the result of the
- *     translation.
- */
-function getTextAndTranslation(origin, dest, savePrefs) {
-  var result = {};
-  var text = getSelectedText();
-  result['text'] = text.join('\n');
-
-  if (savePrefs == true) {
-    var userProperties = PropertiesService.getUserProperties();
-    userProperties.setProperty('originLang', origin);
-    userProperties.setProperty('destLang', dest);
-  }
-
-  result['translation'] = translateText(result['text'], origin, dest);
-
-  return result;
-}
-
-/**
  * Places the text into the proper sheet.
  * @param {string} newText The text with which to replace the current selection.
  */
@@ -152,25 +104,4 @@ function insertText(newText) {
 	{
 		cell.setFormula(newText);
 	}
-}
-
-
-/**
- * Given text, translate it from the origin language to the destination
- * language. The languages are notated by their two-letter short form. For
- * example, English is 'en', and Spanish is 'es'. The origin language may be
- * specified as an empty string to indicate that Google Translate should
- * auto-detect the language.
- *
- * @param {string} text text to translate.
- * @param {string} origin The two-letter short form for the origin language.
- * @param {string} dest The two-letter short form for the destination language.
- * @return {string} The result of the translation, or the original text if
- *     origin and dest languages are the same.
- */
-function translateText(text, origin, dest) {
-  if (origin === dest) {
-    return text;
-  }
-  return LanguageApp.translate(text, origin, dest);
 }
