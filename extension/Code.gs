@@ -45,7 +45,7 @@ function onInstall(e) {
  */
 function showSidebar() {
   var ui = HtmlService.createHtmlOutputFromFile('Sidebar')
-      .setTitle('Hello Zach');
+      .setTitle('Build Formulas with Blockly!');
   SpreadsheetApp.getUi().showSidebar(ui);
 }
 
