@@ -6,6 +6,7 @@
  * attempt to read or modify the files in which the add-on is used,
  * and not all of the user's files. The authorization request message
  * presented to users will reflect this limited scope.
+ * @author zachdecook@gmail.com (Zach DeCook)
  */
  
 /**
@@ -56,50 +57,21 @@ function showSidebar() {
  * @return {Array.<string>} The selected text.
  */
 function getSelectedText() {
-  /*var selection = SpreadsheetApp.Document().getSelection();
-  if (selection) {
-    var text = [];
-    var elements = selection.getSelectedElements();
-    for (var i = 0; i < elements.length; i++) {
-      if (elements[i].isPartial()) {
-        var element = elements[i].getElement().asText();
-        var startIndex = elements[i].getStartOffset();
-        var endIndex = elements[i].getEndOffsetInclusive();
-
-        text.push(element.getText().substring(startIndex, endIndex + 1));
-      } else {
-        var element = elements[i].getElement();
-        // Only translate elements that can be edited as text; skip images and
-        // other non-text elements.
-        if (element.editAsText) {
-          var elementText = element.asText().getText();
-          // This check is necessary to exclude images, which return a blank
-          // text element.
-          if (elementText != '') {
-            text.push(elementText);
-          }
-        }
-      }
-    }
-    if (text.length == 0) {
-      throw 'Please select some text.';
-    }
-    return text;
-  } else {
-    throw 'Please select some text.';
-}*/
+	// TODO: pull formulas out of the current sheet.
+	throw 'this function does not do anything yet.';
 }
 
 /**
- * Places the text into the proper sheet.
- * @param {string} newText The text with which to replace the current selection.
+ * Places the text into the proper cell.
+ * @param {string} newText The text from the client application.
  */
 function insertText(newText) {
 	var ss = SpreadsheetApp.getActiveSpreadsheet();
 	var sheet = ss.getSheets()[0];
 	// Returns the active cell
 	var cell = sheet.getActiveCell();
-	sheet.setActiveSelection("B2")
+	// TODO: Insert into the correct cells (rather than just A1)
+	// Google sheets doesn't tell us which cell is selected (https://stackoverflow.com/a/14145152)
 	if ( cell.canEdit() )
 	{
 		cell.setFormula(newText);
