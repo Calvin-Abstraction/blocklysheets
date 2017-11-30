@@ -26,4 +26,9 @@
 	<block type="text_length"></block>
 	<block type="text_print"></block>
   </category>
+	<category name="SheetsBlocks">
+	<block type="equals"></block>
+	<block type="sheets_cell"></block>
+	<block type="sheets_cell_absolute"></block>
+  </category>
 </xml>

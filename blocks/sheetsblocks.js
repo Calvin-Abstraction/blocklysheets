@@ -3,20 +3,20 @@
  * @author zachdecook@gmail.com (Zach DeCook)
  */
 Blockly.Blocks['equals'] = {
-  init: function() {
-    this.appendValueInput("A")
-        .setCheck("Number");
-    this.appendDummyInput()
-        .appendField("=");
-    this.appendValueInput("B")
-        .setCheck("Number");
-    this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setColour(230);
- this.setTooltip("");
- this.setHelpUrl("");
-  }
+    init: function() {
+      this.appendValueInput("A")
+          .setCheck(null);
+      this.appendDummyInput()
+          .appendField("=");
+      this.appendValueInput("B")
+          .setCheck(null);
+      this.setInputsInline(true);
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(230);
+   this.setTooltip("");
+   this.setHelpUrl("");
+    }
 };
 
 Blockly.Blocks['sheets_cell'] = {
