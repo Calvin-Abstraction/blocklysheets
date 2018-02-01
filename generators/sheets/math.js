@@ -22,6 +22,7 @@
  * @fileoverview Generating Sheets for math blocks.
  * @author q.neutron@gmail.com (Quynh Neutron)
  * @author zachdecook@gmail.com (Zach DeCook)
+ * @author andrewdt97@gmail.com (Andrew Thomas)
  */
 'use strict';
 
@@ -43,7 +44,7 @@ Blockly.Sheets['math_arithmetic'] = function(block) {
     'MINUS': [' - ', Blockly.Sheets.ORDER_SUBTRACTION],
     'MULTIPLY': [' * ', Blockly.Sheets.ORDER_MULTIPLICATION],
     'DIVIDE': [' / ', Blockly.Sheets.ORDER_DIVISION],
-    'POWER': [null, Blockly.Sheets.ORDER_COMMA]  // Handle power separately.
+    'POWER': [' ^ ', Blockly.Sheets.ORDER_COMMA]
   };
   var tuple = OPERATORS[block.getFieldValue('OP')];
   var operator = tuple[0];
@@ -87,19 +88,19 @@ Blockly.Sheets['math_single'] = function(block) {
   // wrapping the code.
   switch (operator) {
     case 'ABS':
-      code = 'Math.abs(' + arg + ')';
+      code = 'ABS(' + arg + ')';
       break;
     case 'ROOT':
-      code = 'Math.sqrt(' + arg + ')';
+      code = 'SQRT(' + arg + ')';
       break;
     case 'LN':
-      code = 'Math.log(' + arg + ')';
+      code = 'LN(' + arg + ')';
       break;
     case 'EXP':
-      code = 'Math.exp(' + arg + ')';
+      code = 'EXP(' + arg + ')';
       break;
     case 'POW10':
-      code = 'Math.pow(10,' + arg + ')';
+      code = 'POW(10,' + arg + ')';
       break;
     case 'ROUND':
       code = 'Math.round(' + arg + ')';
@@ -127,7 +128,7 @@ Blockly.Sheets['math_single'] = function(block) {
   // wrapping the code.
   switch (operator) {
     case 'LOG10':
-      code = 'Math.log(' + arg + ') / Math.log(10)';
+      code = 'LOG10(' + arg + ')';
       break;
     case 'ASIN':
       code = 'Math.asin(' + arg + ') / Math.PI * 180';
