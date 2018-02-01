@@ -2687,7 +2687,10 @@ Blockly.Sheets.getAdjusted = function(block, atId, opt_delta, opt_negate,
 Blockly.Sheets['equals'] = function(block) {
   var value_a = Blockly.Sheets.valueToCode(block, 'A', Blockly.Sheets.ORDER_ATOMIC);
   var value_b = Blockly.Sheets.valueToCode(block, 'B', Blockly.Sheets.ORDER_ATOMIC);
-  var code = value_a + '=' + value_b;
+
+  // relying on NOT doing complicated string things,
+  // so we are using a \n for singaling end of statment
+  var code = value_a + '=' + value_b + '\n';
   return code;
 };
 
