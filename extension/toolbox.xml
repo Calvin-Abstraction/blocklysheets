@@ -1,4 +1,8 @@
 <xml id="toolbox" style="display: none">
+<category name="Sheets">
+	<block type="equals"></block>
+	<block type="sheets_cell"></block>
+</category>
   <category name="Logic">
 	<block type="controls_if"></block>
 	<block type="logic_compare"></block>
