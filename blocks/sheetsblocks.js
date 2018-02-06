@@ -48,3 +48,18 @@ Blockly.Blocks['sheets_cell_absolute'] = {
  this.setHelpUrl("");
   }
 };
+
+Blockly.Blocks['average'] = {
+    init: function() {
+      this.appendDummyInput()
+          .appendField("Average");
+      this.appendValueInput("input")
+          .setCheck(null);
+      this.setInputsInline(true);
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(165);
+   this.setTooltip("");
+   this.setHelpUrl("");
+    }
+};

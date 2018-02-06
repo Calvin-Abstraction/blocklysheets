@@ -30,7 +30,6 @@ Blockly.Sheets['sheets_cell'] = function(block) {
     text_row = "FAIL ROW";
   }
   var code = text_column + text_row;
-  // TODO: Change ORDER_NONE to the correct strength.
   return [code, Blockly.Sheets.ORDER_ATOMIC];
 };
 
@@ -54,9 +53,12 @@ Blockly.Sheets['sheets_cell_absolute'] = function(block) {
     text_row = "FAIL ROW";
   }
   var code = dropdown_selectionfirst + text_column + dropdown_selectionsecond + text_row;
-  // TODO: Change ORDER_NONE to the correct strength.
   return [code, Blockly.Sheets.ORDER_ATOMIC];
 };
 
-
+Blockly.Sheets['average'] = function(block) {
+  var value_input = Blockly.Sheets.valueToCode(block, 'input', Blockly.Sheets.ORDER_ATOMIC);
+  var code = 'average(' + value_input + ')';
+  return code;
+};
 

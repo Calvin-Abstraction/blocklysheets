@@ -1931,6 +1931,21 @@ Blockly.Blocks['sheets_cell_absolute'] = {
  this.setTooltip("");
  this.setHelpUrl("");
   }
+};
+
+Blockly.Blocks['average'] = {
+    init: function() {
+      this.appendDummyInput()
+          .appendField("Average");
+      this.appendValueInput("input")
+          .setCheck(null);
+      this.setInputsInline(true);
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(165);
+   this.setTooltip("");
+   this.setHelpUrl("");
+    }
 };</script>
 <script>
 // This file was automatically generated.  Do not modify.
@@ -2712,7 +2727,6 @@ Blockly.Sheets['sheets_cell'] = function(block) {
     text_row = "FAIL ROW";
   }
   var code = text_column + text_row;
-  // TODO: Change ORDER_NONE to the correct strength.
   return [code, Blockly.Sheets.ORDER_ATOMIC];
 };
 
@@ -2736,11 +2750,14 @@ Blockly.Sheets['sheets_cell_absolute'] = function(block) {
     text_row = "FAIL ROW";
   }
   var code = dropdown_selectionfirst + text_column + dropdown_selectionsecond + text_row;
-  // TODO: Change ORDER_NONE to the correct strength.
   return [code, Blockly.Sheets.ORDER_ATOMIC];
 };
 
-
+Blockly.Sheets['average'] = function(block) {
+  var value_input = Blockly.Sheets.valueToCode(block, 'input', Blockly.Sheets.ORDER_ATOMIC);
+  var code = 'average(' + value_input + ')';
+  return code;
+};
 
 </script>
 <script>
@@ -4568,6 +4585,7 @@ Blockly.Sheets['variables_set'] = function(block) {
 	<block type="equals"></block>
 	<block type="sheets_cell"></block>
 	<block type="sheets_cell_absolute"></block>
+	<block type="average"></block>
   </category>
 </xml><xml id="startBlocks" style="display: none">
   <block type="controls_if" inline="false" x="20" y="20">
