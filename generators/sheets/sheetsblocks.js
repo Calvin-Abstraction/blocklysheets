@@ -56,7 +56,7 @@ Blockly.Sheets['sheets_cell_absolute'] = function(block) {
   return [code, Blockly.Sheets.ORDER_ATOMIC];
 };
 
-Blockly.Sheets['average'] = function(block) {
+Blockly.Sheets['sheets_average'] = function(block) {
   var value_input = Blockly.Sheets.valueToCode(block, 'input', Blockly.Sheets.ORDER_ATOMIC);
   var code = 'average(' + value_input + ')';
   return code;
