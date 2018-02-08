@@ -3606,6 +3606,7 @@ Blockly.Sheets['controls_flow_statements'] = function(block) {
  * @fileoverview Generating Sheets for math blocks.
  * @author q.neutron@gmail.com (Quynh Neutron)
  * @author zachdecook@gmail.com (Zach DeCook)
+ * @author andrewdt97@gmail.com (Andrew Thomas)
  */
 'use strict';
 
@@ -3627,7 +3628,7 @@ Blockly.Sheets['math_arithmetic'] = function(block) {
     'MINUS': [' - ', Blockly.Sheets.ORDER_SUBTRACTION],
     'MULTIPLY': [' * ', Blockly.Sheets.ORDER_MULTIPLICATION],
     'DIVIDE': [' / ', Blockly.Sheets.ORDER_DIVISION],
-    'POWER': [null, Blockly.Sheets.ORDER_COMMA]  // Handle power separately.
+    'POWER': [' ^ ', Blockly.Sheets.ORDER_COMMA]
   };
   var tuple = OPERATORS[block.getFieldValue('OP')];
   var operator = tuple[0];
@@ -3671,19 +3672,19 @@ Blockly.Sheets['math_single'] = function(block) {
   // wrapping the code.
   switch (operator) {
     case 'ABS':
-      code = 'Math.abs(' + arg + ')';
+      code = 'ABS(' + arg + ')';
       break;
     case 'ROOT':
-      code = 'Math.sqrt(' + arg + ')';
+      code = 'SQRT(' + arg + ')';
       break;
     case 'LN':
-      code = 'Math.log(' + arg + ')';
+      code = 'LN(' + arg + ')';
       break;
     case 'EXP':
-      code = 'Math.exp(' + arg + ')';
+      code = 'EXP(' + arg + ')';
       break;
     case 'POW10':
-      code = 'Math.pow(10,' + arg + ')';
+      code = 'POW(10,' + arg + ')';
       break;
     case 'ROUND':
       code = 'Math.round(' + arg + ')';
@@ -3711,7 +3712,7 @@ Blockly.Sheets['math_single'] = function(block) {
   // wrapping the code.
   switch (operator) {
     case 'LOG10':
-      code = 'Math.log(' + arg + ') / Math.log(10)';
+      code = 'LOG10(' + arg + ')';
       break;
     case 'ASIN':
       code = 'Math.asin(' + arg + ') / Math.PI * 180';
@@ -4551,6 +4552,10 @@ Blockly.Sheets['variables_set'] = function(block) {
 </head>
 <body>
 <xml id="toolbox" style="display: none">
+<category name="Sheets">
+	<block type="equals"></block>
+	<block type="sheets_cell"></block>
+</category>
   <category name="Logic">
 	<block type="controls_if"></block>
 	<block type="logic_compare"></block>
@@ -4585,52 +4590,17 @@ Blockly.Sheets['variables_set'] = function(block) {
 	<block type="sheets_average"></block>
   </category>
 </xml><xml id="startBlocks" style="display: none">
-  <block type="controls_if" inline="false" x="20" y="20">
-	<mutation else="1"></mutation>
-	<value name="IF0">
-	  <block type="logic_compare" inline="true">
-		<field name="OP">EQ</field>
+	<block type="equals">
 		<value name="A">
-		  <block type="math_arithmetic" inline="true">
-			<field name="OP">MULTIPLY</field>
-			<value name="A">
-			  <block type="math_number">
-				<field name="NUM">6</field>
-			  </block>
-			</value>
-			<value name="B">
-			  <block type="math_number">
-				<field name="NUM">7</field>
-			  </block>
-			</value>
-		  </block>
+			<block type="sheets_cell">
+				<value name="column">D</value>
+			</block>
 		</value>
 		<value name="B">
-		  <block type="math_number">
-			<field name="NUM">42</field>
-		  </block>
+			<block type="sheets_cell">
+			</block>
 		</value>
-	  </block>
-	</value>
-	<statement name="DO0">
-	  <block type="text_print" inline="false">
-		<value name="TEXT">
-		  <block type="text">
-			<field name="TEXT">Don't panic</field>
-		  </block>
-		</value>
-	  </block>
-	</statement>
-	<statement name="ELSE">
-	  <block type="text_print" inline="false">
-		<value name="TEXT">
-		  <block type="text">
-			<field name="TEXT">Panic</field>
-		  </block>
-		</value>
-	  </block>
-	</statement>
-  </block>
+	</block>
 </xml>
 <div class="sidebar branding-below">
 
@@ -4640,7 +4610,7 @@ Blockly.Sheets['variables_set'] = function(block) {
 
 <script>
   var workspace = Blockly.inject('blocklyDiv',
-	  {media: '../../media/',
+	  {media: 'https://zachdecook.com/blocklysheets/media/',
 	   toolbox: document.getElementById('toolbox')});
   Blockly.Xml.domToWorkspace(document.getElementById('startBlocks'),
 							 workspace);
@@ -4675,7 +4645,9 @@ workspace.addChangeListener(myUpdateFunction);
   </div>
 
   <div class="sidebar bottom">
-	<img alt="Add-on logo" class="logo" src="http://clubs.calvin.edu/abstract/wp-content/uploads/2015/03/abstraction-logo.png" width="27" height="27">
+	<img alt="Add-on logo" class="logo"
+		src="https://zachdecook.com/blocklysheets/media/abstraction-logo.png"
+		width="27" height="27">
 	<span class="gray branding-text">Coded carefully by Abstraction</span>
   </div>
 

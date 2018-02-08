@@ -68,12 +68,27 @@ function getSelectedText() {
 function insertText(newText) {
 	var ss = SpreadsheetApp.getActiveSpreadsheet();
 	var sheet = ss.getSheets()[0];
-	// Returns the active cell
-	var cell = sheet.getActiveCell();
-	// TODO: Insert into the correct cells (rather than just A1)
+
 	// Google sheets doesn't tell us which cell is selected (https://stackoverflow.com/a/14145152)
-	if ( cell.canEdit() )
-	{
-		cell.setFormula(newText);
-	}
+	// so we take in a string that tells us what formula to give each cell.
+
+	// This is currently split by newline.
+	var lines = newText.split(/\r?\n/);
+	lines.forEach(function(line){
+		// Match the beginning of the line being a cell reference.
+		var regex = /^[A-Z]+\d+/
+		var ref = line.match( regex );
+		if ( ref )
+		{
+			var cell = sheet.getRange( ref );
+			if ( cell && cell.canEdit() )
+			{
+				cell.setFormula( line.replace( regex, '' ) );
+			}
+			else
+			{
+				throw 'unable to edit ' + ref + ' cell.';
+			}
+		}
+	});
 }

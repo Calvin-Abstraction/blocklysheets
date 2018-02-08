@@ -6,7 +6,7 @@
 
 <script>
   var workspace = Blockly.inject('blocklyDiv',
-	  {media: '../../media/',
+	  {media: 'https://zachdecook.com/blocklysheets/media/',
 	   toolbox: document.getElementById('toolbox')});
   Blockly.Xml.domToWorkspace(document.getElementById('startBlocks'),
 							 workspace);
@@ -41,7 +41,9 @@ workspace.addChangeListener(myUpdateFunction);
   </div>
 
   <div class="sidebar bottom">
-	<img alt="Add-on logo" class="logo" src="http://clubs.calvin.edu/abstract/wp-content/uploads/2015/03/abstraction-logo.png" width="27" height="27">
+	<img alt="Add-on logo" class="logo"
+		src="https://zachdecook.com/blocklysheets/media/abstraction-logo.png"
+		width="27" height="27">
 	<span class="gray branding-text">Coded carefully by Abstraction</span>
   </div>
 
