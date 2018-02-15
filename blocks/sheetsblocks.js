@@ -48,3 +48,19 @@ Blockly.Blocks['sheets_cell_absolute'] = {
  this.setHelpUrl("");
   }
 };
+
+Blockly.Blocks['sheets_range'] = {
+  init: function() {
+    this.appendValueInput("RangeStart")
+        .setCheck('sheets_cell')
+        .appendField("Range:");
+    this.appendValueInput("RangeEnd")
+        .setCheck('sheets_cell')
+        .appendField("to");
+    this.setInputsInline(true);
+    this.setOutput(true, null);
+    this.setColour(230);
+    this.setTooltip("");
+    this.setHelpUrl("");
+  }
+};
