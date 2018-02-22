@@ -6,7 +6,7 @@ Blockly.Sheets['equals'] = function(block) {
   var value_a = Blockly.Sheets.valueToCode(block, 'A', Blockly.Sheets.ORDER_ATOMIC);
   var value_b = Blockly.Sheets.valueToCode(block, 'B', Blockly.Sheets.ORDER_ATOMIC);
   var code = value_a + '=' + value_b;
-  return code;
+  return code + '\n';
 };
 
 Blockly.Sheets['sheets_cell'] = function(block) {
@@ -58,6 +58,6 @@ Blockly.Sheets['sheets_cell_absolute'] = function(block) {
 Blockly.Sheets['sheets_range'] = function(block) {
   var value_rangestart = Blockly.Sheets.valueToCode(block, 'RangeStart', Blockly.Sheets.ORDER_ATOMIC);
   var value_rangeend = Blockly.Sheets.valueToCode(block, 'RangeEnd', Blockly.Sheets.ORDER_ATOMIC);
-  var code = value_rangestart + ':' + value_rangeend;
+  var code = value_rangestart + ':' + value_rangeend + '\n';
   return [code, Blockly.Sheets.ORDER_ATOMIC];
 };
