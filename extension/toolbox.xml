@@ -26,4 +26,8 @@
 	<block type="text_length"></block>
 	<block type="text_print"></block>
   </category>
+  <category name="Sheets">
+	<block type="sheets_start"></block>
+	<block type="sheets_sum"></block>
+  </category>
 </xml>
