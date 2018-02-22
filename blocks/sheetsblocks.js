@@ -3,20 +3,20 @@
  * @author zachdecook@gmail.com (Zach DeCook)
  */
 Blockly.Blocks['equals'] = {
-  init: function() {
-    this.appendValueInput("A")
-        .setCheck("Number");
-    this.appendDummyInput()
-        .appendField("=");
-    this.appendValueInput("B")
-        .setCheck("Number");
-    this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setColour(230);
- this.setTooltip("");
- this.setHelpUrl("");
-  }
+    init: function() {
+      this.appendValueInput("A")
+          .setCheck(null);
+      this.appendDummyInput()
+          .appendField("=");
+      this.appendValueInput("B")
+          .setCheck(null);
+      this.setInputsInline(true);
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(230);
+   this.setTooltip("");
+   this.setHelpUrl("");
+    }
 };
 
 Blockly.Blocks['sheets_cell'] = {
@@ -46,5 +46,21 @@ Blockly.Blocks['sheets_cell_absolute'] = {
     this.setColour(230);
  this.setTooltip("");
  this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['sheets_range'] = {
+  init: function() {
+    this.appendValueInput("RangeStart")
+        .setCheck('sheets_cell')
+        .appendField("Range:");
+    this.appendValueInput("RangeEnd")
+        .setCheck('sheets_cell')
+        .appendField("to");
+    this.setInputsInline(true);
+    this.setOutput(true, null);
+    this.setColour(230);
+    this.setTooltip("");
+    this.setHelpUrl("");
   }
 };
