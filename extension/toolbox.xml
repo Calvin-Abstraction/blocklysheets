@@ -3,16 +3,6 @@
 	<block type="logic_compare"></block>
 	<block type="logic_boolean"></block>
   </category>
-  <category name="Loops">
-	<block type="controls_repeat_ext">
-	  <value name="TIMES">
-		<block type="math_number">
-		  <field name="NUM">10</field>
-		</block>
-	  </value>
-	</block>
-	<block type="controls_whileUntil"></block>
-  </category>
   <category name="Math">
 	<block type="math_number"></block>
 	<block type="math_arithmetic"></block>
