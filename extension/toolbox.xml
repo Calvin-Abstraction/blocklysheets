@@ -1,13 +1,6 @@
 <xml id="toolbox" style="display: none">
-<category name="Sheets">
-	<block type="equals"></block>
-	<block type="sheets_cell"></block>
-</category>
   <category name="Logic">
-	<block type="controls_if"></block>
 	<block type="logic_compare"></block>
-	<block type="logic_operation"></block>
-	<block type="logic_negate"></block>
 	<block type="logic_boolean"></block>
   </category>
   <category name="Loops">
@@ -25,18 +18,11 @@
 	<block type="math_arithmetic"></block>
 	<block type="math_single"></block>
   </category>
-  <category name="Text">
-	<block type="text"></block>
-	<block type="text_length"></block>
-	<block type="text_print"></block>
-  </category>
-	<category name="SheetsBlocks">
-		<block type="equals"></block>
-		<block type="sheets_cell"></block>
-		<block type="sheets_cell_absolute"></block>
-		<block type="sheets_range"></block>
-	</category>
-  <category name="Sheets">
+	<category name="Sheets">
+	<block type="equals"></block>
+	<block type="sheets_cell"></block>
+	<block type="sheets_cell_absolute"></block>
+  <block type="sheets_range"></block>
 	<block type="sheets_sum"></block>
   </category>
 </xml>
