@@ -1,13 +1,94 @@
-<xml id="startBlocks" style="display: none">
-	<block type="equals">
+<xml xmlns="http://www.w3.org/1999/xhtml" id="startBlocks" style="display: none">
+	<variables>
+	</variables>
+	<block type="equals" id="Mj:tq-.2/{-Yt-XPTlM#" x="0" y="0">
 		<value name="A">
-			<block type="sheets_cell">
-				<value name="column">D</value>
+			<block type="sheets_cell" id="+;sEj=+poQKND{~8Pb*l">
+				<field name="column">A</field>
+				<field name="row">1</field>
 			</block>
 		</value>
 		<value name="B">
-			<block type="sheets_cell">
+			<block type="math_number" id="y#(X0D,VD6d8RQq@_cn!">
+				<field name="NUM">42</field>
 			</block>
 		</value>
+	<next>
+		<block type="equals" id="`s@b/)0gOm%p;IS_Q*Si">
+			<value name="A">
+				<block type="sheets_cell" id="c)%d!}hmCxv{37`!KS6%">
+					<field name="column">A</field>
+					<field name="row">2</field>
+				</block>
+			</value>
+			<value name="B">
+				<block type="sheets_cell" id="y3n5BFAcUMzONz!XvR]p">
+					<field name="column">A</field>
+					<field name="row">1</field>
+				</block>
+			</value>
+	<next>
+		<block type="equals" id="^O05a^VDM=LJh:YiaSEX">
+			<value name="A">
+				<block type="sheets_cell" id="Ngp=0+OdoZ)0+Hl|)w/=">
+					<field name="column">A</field>
+					<field name="row">3</field>
+				</block>
+			</value>
+			<value name="B">
+				<block type="math_arithmetic" id="q@_E~TfoEN9p;!ybnDO(">
+					<field name="OP">ADD</field>
+					<value name="A">
+						<block type="sheets_cell" id="eu?@3y1g+_{FL-pFb4/c">
+							<field name="column">A</field>
+							<field name="row">2</field>
+						</block>
+					</value>
+					<value name="B">
+						<block type="math_single" id=".h6K7FJmT9:;dp99R1Fg">
+							<field name="OP">ROOT</field>
+							<value name="NUM">
+								<block type="math_number" id="UV}%]40TL@kIQ%MF!@jS">
+									<field name="NUM">16</field>
+								</block>
+							</value>
+						</block>
+					</value>
+				</block>
+			</value>
+	<next>
+		<block type="equals" id="#/AG|[!~]rk}j4l5]w=L">
+			<value name="A">
+				<block type="sheets_cell" id="EB;|Zg!Gv4vqYnU_{kq-">
+					<field name="column">A</field>
+					<field name="row">4</field>
+				</block>
+			</value>
+			<value name="B">
+				<block type="sheets_sum" id="V9V[ifG8P_NH-s.:mOlJ">
+					<value name="range">
+						<block type="sheets_range" id="VphZI-!L{nnFH9VYrdf^">
+							<value name="RangeStart">
+								<block type="sheets_cell" id="9:%AXqFd)uXu9;CA^%gD">
+									<field name="column">C</field>
+									<field name="row">1</field>
+								</block>
+							</value>
+							<value name="RangeEnd">
+								<block type="sheets_cell" id=",ExDzef=p8CK%woPsJdC">
+									<field name="column">C</field>
+									<field name="row">99</field>
+								</block>
+							</value>
+						</block>
+					</value>
+				</block>
+			</value>
+		</block>
+	</next>
+	</block>
+	</next>
+	</block>
+	</next>
 	</block>
 </xml>

@@ -59,9 +59,10 @@ Blockly.Sheets['sheets_cell_absolute'] = function(block) {
 Blockly.Sheets['sheets_range'] = function(block) {
   var value_rangestart = Blockly.Sheets.valueToCode(block, 'RangeStart', Blockly.Sheets.ORDER_ATOMIC);
   var value_rangeend = Blockly.Sheets.valueToCode(block, 'RangeEnd', Blockly.Sheets.ORDER_ATOMIC);
-  var code = value_rangestart + ':' + value_rangeend + '\n';
+  var code = value_rangestart + ':' + value_rangeend;
   return [code, Blockly.Sheets.ORDER_ATOMIC];
 };
+
 Blockly.Sheets['sheets_start'] = function(block) {
   var value_name = Blockly.Sheets.valueToCode(block, 'NAME', Blockly.Sheets.ORDER_ATOMIC);
   var code = '=' + value_name;
@@ -71,5 +72,5 @@ Blockly.Sheets['sheets_start'] = function(block) {
 Blockly.Sheets['sheets_sum'] = function(block) {
   var value_range = Blockly.Sheets.valueToCode(block, 'range', Blockly.Sheets.ORDER_ATOMIC);
   var code = 'sum(' + value_range + ')';
-  return code;
+  return [code, Blockly.Sheets.ORDER_ATOMIC];
 };
