@@ -23,5 +23,6 @@
 	<block type="sheets_cell"></block>
 	<block type="sheets_cell_absolute"></block>
   <block type="sheets_range"></block>
+	<block type="sheets_sum"></block>
   </category>
 </xml>
